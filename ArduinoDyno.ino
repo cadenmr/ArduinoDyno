@@ -66,7 +66,7 @@ void setup() {
   
   Serial.begin(115200);
 
-  while (!Serial.available()) { ; } // wait for connection
+  while (!Serial) { ; } // wait for connection
 
   attachInterrupt(digitalPinToInterrupt(SHAFT_HALL_PICKUP_PIN), hallInterrupt, FALLING);
 
