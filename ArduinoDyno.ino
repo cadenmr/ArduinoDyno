@@ -8,6 +8,9 @@
 #define                 LOADCELL_CLOCK_PIN                7
 #define                 LOADCELL_DATA_PIN                 8
 
+// internal data formatting config
+#define                 INCOMING_PACKET_SIZE_BYTES        6
+
 // Shaft Speed config
 unsigned int            shaftRpmMaximum                   = 9000;
 unsigned int            shaftRpmMaximumHyst               = 300;
@@ -73,6 +76,8 @@ void loop() {
 
   // Check for serial comms + respond  + perform any special request + update variables
 
+  if (Serial.available() >= INCOMING_PACKET_SIZE_BYTES) { parseIncomingSerial() }
+
   // Read/compute sensor data
 
   // Check for failure cases
@@ -80,6 +85,30 @@ void loop() {
   // Recalculate pid
 
   // 
+
+}
+
+void parseIncomingSerial() {
+
+}
+
+void serialDataToBoolean(boolean targetVar) {
+
+}
+
+void serialDataToByte(byte targetVar) {
+
+}
+
+void serialDataToSignedInt(int targetVar) {
+
+}
+
+void serialDataToUnsignedInt(unsigned int targetVar) {
+
+}
+
+void serialDataToDouble(double targetVar) {
 
 }
 
