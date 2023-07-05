@@ -84,10 +84,6 @@ void loop() {
 
 }
 
-void startupDataParse() {
-  
-}
-
 // returns true if we had a successful calculation, false if not
 boolean calculateRpm() {
 
