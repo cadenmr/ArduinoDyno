@@ -44,19 +44,19 @@ unsigned int            shaftRpmCurrent                   = 0;
 unsigned int            shaftRpmDesired                   = shaftRpmMaximum;
 volatile unsigned long  shaftHallMicrosCurrent            = 0;
 volatile unsigned long  shaftHallMicrosLast               = 0;
-volatile boolean        shaftRpmUpdateReady               = false;
+volatile bool           shaftRpmUpdateReady               = false;
 unsigned long           shaftRpmTimeDelta                 = 0;
 // unsigned long        shaftRpmReadings;                 // TODO: Implement this
 
 // Inlet Valve Control
 byte                    inletDutyCurrent                  = 0;
 byte                    inletDutyDesired                  = inletMinDuty;
-boolean                 inletOverrideActive               = false;
+bool                    inletOverrideActive               = false;
 
 // Outlet Valve Control
 byte                    outletDutyCurrent                 = 0;
 byte                    outletDutyDesired                 = outletMinDuty;
-boolean                 outletOverrideActive              = false;
+bool                    outletOverrideActive              = false;
 byte                    outletTemperatureCurrent          = 0;
 
 // Load Measurement
