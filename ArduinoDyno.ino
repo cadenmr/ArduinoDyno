@@ -321,10 +321,22 @@ void hallInterrupt() {
   shaftHallMicrosLast = shaftHallMicrosCurrent;
   shaftHallMicrosCurrent = micros();
 
-  if (shaftHallMicrosLast != 0 && shaftHallMicrosCurrent != 0) {
-    shaftRpmUpdateReady = true;
-  } else {
+  // check if both values are loaded
+  if (shaftHallMicrosLast == 0 || shaftHallMicrosCurrent == 0) {
+
+    // we are not ready to recalculate if we have one of these equaling zero
     shaftRpmUpdateReady = false;
+
+  } else {  // if both values are loaded
+
+    // make sure the current micros count is higher than the last micros count
+    // this prevents a bug where micros() will overflow about every ~70 minutes
+    if (shaftHallMicrosLast > shaftHallMicrosCurrent) {
+      shaftRpmUpdateReady = false;
+    } else {
+      // if both checks pass, we are good to calculate the RPM
+      shaftRpmUpdateReady = true;
+    }
   }
 
 }
