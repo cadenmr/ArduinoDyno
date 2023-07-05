@@ -223,7 +223,6 @@ byte serialDataToByte() {
   byte returnData = Serial.read();
   return returnData;
 
-
 }
 
 // 16 bit - use last 2 bytes of inc. data
@@ -233,14 +232,11 @@ int serialDataToSignedInt() {
 
   shredSerialData(3);   // shred all but last 2 bytes of data
 
-  byte upper = Serial.read();
-  byte lower = Serial.read();
-
   uint8_t * returnDataLower = (uint8_t *)&returnData;
   uint8_t * returnDataUpper = (uint8_t *)&returnData + 1;
 
-  *returnDataUpper = upper;
-  *returnDataLower = lower;
+  *returnDataLower = Serial.read();
+  *returnDataUpper = Serial.read();
 
   return returnData;
 
@@ -253,14 +249,11 @@ unsigned int serialDataToUnsignedInt() {
 
   shredSerialData(3);
 
-  byte upper = Serial.read();
-  byte lower = Serial.read();
-
   uint8_t * returnDataLower = (uint8_t *)&returnData;
   uint8_t * returnDataUpper = (uint8_t *)&returnData + 1;
 
-  *returnDataUpper = upper;
-  *returnDataLower = lower;
+  *returnDataLower = Serial.read();
+  *returnDataUpper = Serial.read();
 
   return returnData;
 
@@ -273,45 +266,36 @@ double serialDataToDouble() {
 
   shredSerialData(1);
 
-  byte incD3 = Serial.read();
-  byte incD2 = Serial.read();
-  byte incD1 = Serial.read();
-  byte incD0 = Serial.read();
-
   uint8_t * d0 = (uint8_t *)&returnData;
   uint8_t * d1 = (uint8_t *)&returnData + 1;
   uint8_t * d2 = (uint8_t *)&returnData + 2;
   uint8_t * d3 = (uint8_t *)&returnData + 3;
 
-  *d3 = incD3;
-  *d2 = incD2;
-  *d1 = incD1;
-  *d0 = incD0;
+  *d0 = Serial.read();
+  *d1 = Serial.read();
+  *d2 = Serial.read();
+  *d3 = Serial.read();
 
   return returnData;
 
 }
 
+// 32 bit - use last 4 bytes of inc. data
 unsigned long serialDataToUnsignedLong() {
 
   unsigned long returnData;
 
   shredSerialData(1);
 
-  byte incD3 = Serial.read();
-  byte incD2 = Serial.read();
-  byte incD1 = Serial.read();
-  byte incD0 = Serial.read();
-
   uint8_t * d0 = (uint8_t *)&returnData;
   uint8_t * d1 = (uint8_t *)&returnData + 1;
   uint8_t * d2 = (uint8_t *)&returnData + 2;
   uint8_t * d3 = (uint8_t *)&returnData + 3;
 
-  *d3 = incD3;
-  *d2 = incD2;
-  *d1 = incD1;
-  *d0 = incD0;
+  *d0 = Serial.read();
+  *d1 = Serial.read();
+  *d2 = Serial.read();
+  *d3 = Serial.read();
 
   return returnData;
 
