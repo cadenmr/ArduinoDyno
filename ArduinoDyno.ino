@@ -98,7 +98,8 @@ void parseIncomingSerial() {
   switch (commandByte) {
 
     case 0:     // set shaft RPM max (16 bit) (unsigned int)
-      ;
+      shaftRpmMaximum = serialDataToUnsignedInt();
+      sendTelemetry(true, false);
       break;
 
     case 1:     // set shaft RPM max hysteresis (16 bit) (unsigned int)
@@ -311,6 +312,16 @@ void hallInterrupt() {
     shaftRpmUpdateReady = true;
   } else {
     shaftRpmUpdateReady = false;
+  }
+
+}
+
+bool shaftRpmOverspeed() {
+
+  if (ShaftRpmCurrent > shaftRpmMaximum) {
+    return true;
+  } else {
+    return false;
   }
 
 }
