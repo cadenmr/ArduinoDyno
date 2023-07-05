@@ -318,7 +318,7 @@ void hallInterrupt() {
 
 bool shaftRpmOverspeed() {
 
-  if (ShaftRpmCurrent > shaftRpmMaximum) {
+  if (shaftRpmCurrent > shaftRpmMaximum) {
     return true;
   } else {
     return false;
