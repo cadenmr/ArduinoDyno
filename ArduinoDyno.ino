@@ -113,11 +113,13 @@ void parseIncomingSerial() {
       break;
 
     case 3:     // set shaft rpm timeout (32 bit) (unsigned long)
-      
+      shaftRpmTimeout = serialDataToUnsignedLong();
+      sendTelemetry(true, false);
       break;
 
     case 4:     // set shaft rpm target (16 bit) (unsigned)
-      ;
+      shaftRpmDesired = serialDataToUnsignedInt();
+      sendTelemetry(true, false);
       break;
 
     case 5:     // set inlet kp (32 bit) (double)
