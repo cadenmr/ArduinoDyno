@@ -64,7 +64,6 @@ void setup() {
   Serial.begin(115200);
 
   while (!Serial.available()) { ; } // wait for connection
-  startupDataParse();               // parse all configuration info from host PC
 
   attachInterrupt(digitalPinToInterrupt(SHAFT_HALL_PICKUP_PIN), hallInterrupt, FALLING);
 
