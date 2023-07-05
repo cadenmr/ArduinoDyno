@@ -76,7 +76,7 @@ void loop() {
 
   // Check for serial comms + respond  + perform any special request + update variables
 
-  if (Serial.available() >= INCOMING_PACKET_SIZE_BYTES) { parseIncomingSerial() }
+  if (Serial.available() >= INCOMING_PACKET_SIZE_BYTES) { parseIncomingSerial(); }
 
   // Read/compute sensor data
 
@@ -90,25 +90,144 @@ void loop() {
 
 void parseIncomingSerial() {
 
+  // first byte is the command byte
+  byte commandByte = Serial.read();
+
+  // remaining 5 bytes on buffer are the data bytes
+  // what we do with them depends on the command
+  switch (commandByte) {
+
+    case 0:     // set shaft RPM max (16 bit) (unsigned int)
+      ;
+      break;
+
+    case 1:     // set shaft RPM max hysteresis (16 bit) (unsigned int)
+      ;
+      break;
+
+    case 2:      // set shaft RPM rounding (8 bit) (unsigned int)
+      ;
+      break;
+
+    case 3:     // set shaft rpm timeout (32 bit) (unsigned long)
+      ;
+      break;
+
+    case 4:     // set shaft rpm target (16 bit) (unsigned)
+      ;
+      break;
+
+    case 5:     // set inlet kp (32 bit) (double)
+      ;
+      break;
+
+    case 6:     // set inlet ki (32 bit) (double)
+      ;
+      break;
+
+    case 7:     // set inlet kd (32 bit (double)
+      ;
+      break;
+
+    case 8:     // set inlet min duty (8 bit) (byte)
+      ;
+      break;
+
+    case 9:     // set inlet max duty (8 bit) (byte)
+      ;
+      break;
+
+    case 10:     // enable/disable inlet override (8 bit) (boolean)
+      ;
+      break;
+
+    case 11:    // set inlet override duty cycle (8 bit) (byte)
+      ;
+      break;
+
+    case 12:    // set outlet kp (32 bit) (double)
+      ;
+      break;
+
+    case 13:    // set outlet ki (32 bit) (double)
+      ;
+      break;
+
+    case 14:    // set outlet kd (32 bit) (double)
+      ;
+      break;
+
+    case 15:    // set outlet min duty (8 bit) (byte)
+      ;
+      break;
+
+    case 16:    // set outlet max duty (8 bit) (byte)
+      ;
+      break;
+
+    case 17:    // set outlet target temperature (8 bit) (byte)
+      ;
+      break;
+    
+    case 18:    // enable/disable outlet override (8 bit) (boolean)
+      ;
+      break;
+
+    case 19:    // set outlet override duty cycle (8 bit) (byte)
+      ;
+      break;
+
+    case 20:    // set load cell resolution (8 bit) (byte)
+      ;
+      break;
+
+    case 21:    // set load cell factor (16 bit) (unsigned int)
+      ;
+      break;
+
+    case 22:  // telemetry request (no data)
+      sendTelemetry(false, false);
+      break;
+
+  }
+
 }
 
-void serialDataToBoolean(boolean targetVar) {
+// just read and drop specified amount of data
+void shredSerialData(unsigned int count) {
+
+  for (int i = 0; i > count; i++) {
+    Serial.read();
+  }
 
 }
 
-void serialDataToByte(byte targetVar) {
+// 8 bit - use last byte of inc. data
+boolean serialDataToBoolean() {
+
+  shredSerialData(4);   // shred all but last byte of data
+  boolean returnData = Serial.read();
+  return returnData;
 
 }
 
-void serialDataToSignedInt(int targetVar) {
+byte serialDataToByte() {
 
 }
 
-void serialDataToUnsignedInt(unsigned int targetVar) {
+int serialDataToSignedInt() {
 
 }
 
-void serialDataToDouble(double targetVar) {
+unsigned int serialDataToUnsignedInt() {
+
+}
+
+double serialDataToDouble() {
+
+}
+
+void sendTelemetry(boolean pass, boolean fail) {
 
 }
 
