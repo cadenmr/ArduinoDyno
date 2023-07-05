@@ -107,8 +107,9 @@ void parseIncomingSerial() {
       sendTelemetry(true, false);
       break;
 
-    case 2:      // set shaft RPM rounding (8 bit) (unsigned int)
-      ;
+    case 2:      // set shaft RPM rounding (8 bit) (byte)
+      shaftRpmRounding = serialDataToByte();
+      sendTelemetry(true, false);
       break;
 
     case 3:     // set shaft rpm timeout (32 bit) (unsigned long)
