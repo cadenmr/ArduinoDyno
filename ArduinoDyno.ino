@@ -113,7 +113,7 @@ void parseIncomingSerial() {
       break;
 
     case 3:     // set shaft rpm timeout (32 bit) (unsigned long)
-      ;
+      
       break;
 
     case 4:     // set shaft rpm target (16 bit) (unsigned)
@@ -268,6 +268,31 @@ unsigned int serialDataToUnsignedInt() {
 double serialDataToDouble() {
 
   double returnData;
+
+  shredSerialData(1);
+
+  byte incD3 = Serial.read();
+  byte incD2 = Serial.read();
+  byte incD1 = Serial.read();
+  byte incD0 = Serial.read();
+
+  uint8_t * d0 = (uint8_t *)&returnData;
+  uint8_t * d1 = (uint8_t *)&returnData + 1;
+  uint8_t * d2 = (uint8_t *)&returnData + 2;
+  uint8_t * d3 = (uint8_t *)&returnData + 3;
+
+  *d3 = incD3;
+  *d2 = incD2;
+  *d1 = incD1;
+  *d0 = incD0;
+
+  return returnData;
+
+}
+
+unsigned long serialDataToUnsignedLong() {
+
+  unsigned long returnData;
 
   shredSerialData(1);
 
