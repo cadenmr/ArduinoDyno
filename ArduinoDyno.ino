@@ -103,7 +103,8 @@ void parseIncomingSerial() {
       break;
 
     case 1:     // set shaft RPM max hysteresis (16 bit) (unsigned int)
-      ;
+      shaftRpmMaximumHyst = serialDataToUnsignedInt();
+      sendTelemetry(true, false);
       break;
 
     case 2:      // set shaft RPM rounding (8 bit) (unsigned int)
