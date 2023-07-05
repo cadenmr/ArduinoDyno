@@ -123,71 +123,71 @@ void parseIncomingSerial() {
       break;
 
     case 5:     // set inlet kp (32 bit) (double)
-      ;
+      sendTelemetry(true, false);
       break;
 
     case 6:     // set inlet ki (32 bit) (double)
-      ;
+      sendTelemetry(true, false);
       break;
 
     case 7:     // set inlet kd (32 bit (double)
-      ;
+      sendTelemetry(true, false);
       break;
 
     case 8:     // set inlet min duty (8 bit) (byte)
-      ;
+      sendTelemetry(true, false);
       break;
 
     case 9:     // set inlet max duty (8 bit) (byte)
-      ;
+      sendTelemetry(true, false);
       break;
 
     case 10:     // enable/disable inlet override (8 bit) (boolean)
-      ;
+      sendTelemetry(true, false);
       break;
 
     case 11:    // set inlet override duty cycle (8 bit) (byte)
-      ;
+      sendTelemetry(true, false);
       break;
 
     case 12:    // set outlet kp (32 bit) (double)
-      ;
+      sendTelemetry(true, false);
       break;
 
     case 13:    // set outlet ki (32 bit) (double)
-      ;
+      sendTelemetry(true, false);
       break;
 
     case 14:    // set outlet kd (32 bit) (double)
-      ;
+      sendTelemetry(true, false);
       break;
 
     case 15:    // set outlet min duty (8 bit) (byte)
-      ;
+      sendTelemetry(true, false);
       break;
 
     case 16:    // set outlet max duty (8 bit) (byte)
-      ;
+      sendTelemetry(true, false);
       break;
 
     case 17:    // set outlet target temperature (8 bit) (byte)
-      ;
+      sendTelemetry(true, false);
       break;
     
     case 18:    // enable/disable outlet override (8 bit) (boolean)
-      ;
+      sendTelemetry(true, false);
       break;
 
     case 19:    // set outlet override duty cycle (8 bit) (byte)
-      ;
+      sendTelemetry(true, false);
       break;
 
     case 20:    // set load cell resolution (8 bit) (byte)
-      ;
+      sendTelemetry(true, false);
       break;
 
     case 21:    // set load cell factor (16 bit) (unsigned int)
-      ;
+      sendTelemetry(true, false);
       break;
 
     case 22:  // telemetry request (no data)
@@ -208,10 +208,10 @@ void shredSerialData(unsigned int count) {
 }
 
 // 8 bit - use last byte of inc. data
-boolean serialDataToBoolean() {
+bool serialDataToBoolean() {
 
   shredSerialData(4);   // shred all but last byte of data
-  boolean returnData = Serial.read();
+  bool returnData = Serial.read();
   return returnData;
 
 }
@@ -301,12 +301,12 @@ unsigned long serialDataToUnsignedLong() {
 
 }
 
-void sendTelemetry(boolean pass, boolean fail) {
+void sendTelemetry(bool pass, bool fail) {
 
 }
 
 // returns true if we had a successful calculation, false if not
-boolean calculateRpm() {
+bool calculateRpm() {
 
   if (!shaftRpmUpdateReady) { return false; }   // immediately return false if we're not ready to update
 
