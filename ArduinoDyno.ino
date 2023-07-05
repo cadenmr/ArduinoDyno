@@ -37,27 +37,27 @@ byte                    loadCellResolution                = 128;
 unsigned int            loadCellFactor                    = 0;
 
 // Shaft Speed Control
-unsigned int            shaftRpmCurrent         = 0;
-unsigned int            shaftRpmDesired         = shaftRpmMaximum;
-volatile unsigned long  shaftHallMicrosCurrent  = 0;
-volatile unsigned long  shaftHallMicrosLast     = 0;
-volatile boolean        shaftRpmUpdateReady     = false;
-unsigned long           shaftRpmTimeDelta       = 0;
-// unsigned long        shaftRpmReadings;       // TODO: Implement this
+unsigned int            shaftRpmCurrent                   = 0;
+unsigned int            shaftRpmDesired                   = shaftRpmMaximum;
+volatile unsigned long  shaftHallMicrosCurrent            = 0;
+volatile unsigned long  shaftHallMicrosLast               = 0;
+volatile boolean        shaftRpmUpdateReady               = false;
+unsigned long           shaftRpmTimeDelta                 = 0;
+// unsigned long        shaftRpmReadings;                 // TODO: Implement this
 
 // Inlet Valve Control
-byte                    inletDutyCurrent        = 0;
-byte                    inletDutyDesired        = inletMinDuty;
-boolean                 inletOverrideActive     = false;
+byte                    inletDutyCurrent                  = 0;
+byte                    inletDutyDesired                  = inletMinDuty;
+boolean                 inletOverrideActive               = false;
 
 // Outlet Valve Control
-byte                    outletDutyCurrent       = 0;
-byte                    outletDutyDesired       = outletMinDuty;
-boolean                 outletOverrideActive    = false;
-byte                    outletTemperatureCurrent= 0;
+byte                    outletDutyCurrent                 = 0;
+byte                    outletDutyDesired                 = outletMinDuty;
+boolean                 outletOverrideActive              = false;
+byte                    outletTemperatureCurrent          = 0;
 
-// Measurement
-unsigned int            loadCellForceCurrent    = 0;
+// Load Measurement
+unsigned int            loadCellForceCurrent              = 0;
 
 void setup() {
   
