@@ -117,76 +117,161 @@ void parseIncomingSerial() {
       sendTelemetry(true, false);
       break;
 
+    // TODO: UPDATE PID TOO WHEN THIS HAPPENS
     case 4:     // set shaft rpm target (16 bit) (unsigned)
       shaftRpmDesired = serialDataToUnsignedInt();
       sendTelemetry(true, false);
       break;
 
+    // TODO: UPDATE PID TOO WHEN THIS HAPPENS
     case 5:     // set inlet kp (32 bit) (double)
+      inletPidKp = serialDataToDouble();
       sendTelemetry(true, false);
       break;
 
+    // TODO: UPDATE PID TOO WHEN THIS HAPPENS
     case 6:     // set inlet ki (32 bit) (double)
+      inletPidKi = serialDataToDouble();
       sendTelemetry(true, false);
       break;
 
+    // TODO: UPDATE PID TOO WHEN THIS HAPPENS
     case 7:     // set inlet kd (32 bit (double)
+      inletPidKd = serialDataToDouble();
       sendTelemetry(true, false);
       break;
 
     case 8:     // set inlet min duty (8 bit) (byte)
-      sendTelemetry(true, false);
+
+      byte tempInletMinDuty = serialDataToByte();
+
+      if (tempInletMinDuty > 100) {
+        sendTelemetry(false, true);
+      } else {
+        inletMinDuty = tempInletMinDuty;
+        sendTelemetry(true, false);
+      }
+
       break;
 
     case 9:     // set inlet max duty (8 bit) (byte)
-      sendTelemetry(true, false);
+
+      byte tempInletMaxDuty = serialDataToByte();
+
+      if (tempInletMaxDuty > 100) {
+        sendTelemetry(false, true);
+      } else {
+        inletMaxDuty = tempInletMaxDuty;
+        sendTelemetry(true, false);
+      }
+
       break;
 
+    // TODO: UPDATE PID TOO WHEN THIS HAPPENS
     case 10:     // enable/disable inlet override (8 bit) (boolean)
+      inletOverrideActive = serialDataToBoolean();
       sendTelemetry(true, false);
       break;
 
     case 11:    // set inlet override duty cycle (8 bit) (byte)
-      sendTelemetry(true, false);
+      
+      if (inletOverrideActive) {
+        inletDutyDesired = serialDataToByte();
+        sendTelemetry(true, false);
+      } else {
+        sendTelemetry(false, true);
+      }
+
       break;
 
+    // TODO: UPDATE PID TOO WHEN THIS HAPPENS
     case 12:    // set outlet kp (32 bit) (double)
+      outletPidKp = serialDataToDouble();
       sendTelemetry(true, false);
       break;
 
+    // TODO: UPDATE PID TOO WHEN THIS HAPPENS
     case 13:    // set outlet ki (32 bit) (double)
+      outletPidKi = serialDataToDouble();
       sendTelemetry(true, false);
       break;
 
+    // TODO: UPDATE PID TOO WHEN THIS HAPPENS
     case 14:    // set outlet kd (32 bit) (double)
+      outletPidKd = serialDataToDouble();
       sendTelemetry(true, false);
       break;
 
     case 15:    // set outlet min duty (8 bit) (byte)
-      sendTelemetry(true, false);
+
+      byte tempOutletMinDuty = serialDataToByte();
+
+      if (tempOutletMinDuty > 100) {
+        sendTelemetry(false, true);
+      } else {
+        outletMinDuty = tempOutletMinDuty;
+        sendTelemetry(true, false);
+      }
+
       break;
 
     case 16:    // set outlet max duty (8 bit) (byte)
-      sendTelemetry(true, false);
+
+      byte tempOutletMaxDuty = serialDataToByte();
+
+      if (tempOutletMaxDuty > 100) {
+        sendTelemetry(false, true);
+      } else {
+        outletMaxDuty = tempOutletMaxDuty;
+        sendTelemetry(true, false);
+      }
+
       break;
 
     case 17:    // set outlet target temperature (8 bit) (byte)
+
+      outletMaxTemperature = serialDataToByte();
       sendTelemetry(true, false);
       break;
     
     case 18:    // enable/disable outlet override (8 bit) (boolean)
+
+      outletOverrideActive = serialDataToBoolean();
       sendTelemetry(true, false);
       break;
 
     case 19:    // set outlet override duty cycle (8 bit) (byte)
-      sendTelemetry(true, false);
+
+      if (outletOverrideActive) {
+        outletDutyDesired = serialDataToByte();
+        sendTelemetry(true, false);
+      } else {
+        sendTelemetry(false, true);
+      }
+
       break;
 
+    // TODO: UPDATE LOAD CELL WHEN THIS CHANGES
     case 20:    // set load cell resolution (8 bit) (byte)
+
+      byte tempResolution = serialDataToByte();
+
+      if (tempResolution == 64 || tempResolution == 128 ) {
+
+        loadCellResolution = tempResolution;
+
+      } else {
+        sendTelemetry(false, true);
+      }
+
       sendTelemetry(true, false);
       break;
 
+    // TODO: UPDATE LOAD CELL WHEN THIS HAPPENS
     case 21:    // set load cell factor (16 bit) (unsigned int)
+
+      loadCellFactor = serialDataToUnsignedInt();
+
       sendTelemetry(true, false);
       break;
 
