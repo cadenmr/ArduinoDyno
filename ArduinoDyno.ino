@@ -259,12 +259,12 @@ void parseIncomingSerial() {
       if (tempResolution == 64 || tempResolution == 128 ) {
 
         loadCellResolution = tempResolution;
+        sendTelemetry(true, false);
 
       } else {
         sendTelemetry(false, true);
       }
 
-      sendTelemetry(true, false);
       break;
 
     // TODO: UPDATE LOAD CELL WHEN THIS HAPPENS
