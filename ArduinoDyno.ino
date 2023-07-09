@@ -113,6 +113,14 @@ void loop() {
 
   // Read/compute sensor data
 
+  if (shaftRpmUpdateReady && ((micros() - shaftHallMicrosCurrent) > shaftRpmTimeout)) {
+
+    shaftRpmUpdateReady = false;
+    shaftRpmCurrent = 0;
+    shaftRpmCurrentRounded = 0;
+  
+  }
+
   if (shaftRpmUpdateReady) {
 
     shaftRpmCurrent = 60000000 / (shaftHallMicrosCurrent - shaftHallMicrosLast);
@@ -376,5 +384,45 @@ bool shaftRpmOverspeed() {
   } else {
     return false;
   }
+
+}
+
+void setInlet(int duty) {
+
+  int setDuty = map(duty, 0, 100, 0, 255);
+
+  if (setDuty < inletMinDuty ) {
+
+    setDuty = inletMinDuty;
+
+  }
+
+  if (setDuty > inletMaxDuty) {
+
+    setDuty = inletMaxDuty;
+
+  }
+
+  analogWrite(INLET_SERVO_PIN, setDuty);
+
+}
+
+void setOutlet(int duty) {
+
+  int setDuty = map(duty, 0, 100, 0, 255);
+
+  if (setDuty < outletMinDuty ) {
+
+    setDuty = outletMinDuty;
+
+  }
+
+  if (setDuty > outletMaxDuty) {
+
+    setDuty = outletMaxDuty;
+
+  }
+
+  analogWrite(OUTLET_SERVO_PIN, setDuty);
 
 }
