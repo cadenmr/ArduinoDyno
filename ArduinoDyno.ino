@@ -64,6 +64,8 @@ byte                    outletTemperatureCurrent          = 0;
 unsigned int            loadCellForceCurrent              = 0;
 
 // Internal Objects
+bool configured = false;
+
 ArduPID inletController;
 ArduPID outletController;
 
@@ -74,6 +76,12 @@ void setup() {
   while (!Serial) { ; } // wait for connection
 
   // TODO: load all values from the PC before continuing
+
+  while (!configured) {
+
+    if (Serial.available() >= INCOMING_PACKET_SIZE_BYTES) { parseIncomingSerial(); }
+
+  }
 
   attachInterrupt(digitalPinToInterrupt(SHAFT_HALL_PICKUP_PIN), hallInterrupt, FALLING);
 
@@ -310,6 +318,11 @@ void parseIncomingSerial() {
 
     case 22:  // telemetry request (no data)
       sendTelemetry(false, false);
+      break;
+
+    case 23:  // set configured
+      configured = true;
+      sendTelemetry(true, false);
       break;
 
   }
