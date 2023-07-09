@@ -47,7 +47,7 @@ unsigned int            shaftRpmDesired                   = shaftRpmMaximum;
 volatile unsigned long  shaftHallMicrosCurrent            = 0;
 volatile unsigned long  shaftHallMicrosLast               = 0;
 volatile bool           shaftRpmUpdateReady               = false;
-unsigned long           shaftRpmTimeDelta                 = 0;
+// unsigned long           shaftRpmTimeDelta                 = 0;
 // unsigned long        shaftRpmReadings;                 // TODO: Implement this
 
 // Inlet Valve Control
@@ -75,14 +75,7 @@ void setup() {
   
   Serial.begin(115200);
 
-  while (Serial.available()) {
-    Serial.read();
-  }
-
-  // while (!Serial) { ; } // wait for connection
-
-  // TODO: load all values from the PC before continuing
-
+  // load all config values from pc until we are ready to start up
   while (!configured) {
 
     if (Serial.available() >= INCOMING_PACKET_SIZE_BYTES) { parseIncomingSerial(); }
@@ -114,33 +107,14 @@ void setup() {
 void loop() {
 
   // Check for serial comms + respond  + perform any special request + update variables
-
   if (Serial.available() >= INCOMING_PACKET_SIZE_BYTES) { parseIncomingSerial(); }
 
   // Read/compute sensor data
-
-  // RPM
-  if (shaftRpmUpdateReady && ((micros() - shaftHallMicrosCurrent) > shaftRpmTimeout)) {
-
-    shaftRpmUpdateReady = false;
-    shaftRpmCurrent = 0;
-    shaftRpmCurrentRounded = 0;
-  
-  }
-
-  if (shaftRpmUpdateReady) {
-
-    shaftRpmCurrent = 60000000 / (shaftHallMicrosCurrent - shaftHallMicrosLast);
-    shaftRpmCurrentRounded = (shaftRpmCurrent / shaftRpmRounding + (shaftRpmCurrent % shaftRpmRounding > 2)) * shaftRpmRounding;
-
-  }
+  calculateRpm();
 
   // Temperature
 
   // Load Cell
-
-
-
 
   // Check for failure cases
 
@@ -337,7 +311,7 @@ void sendTelemetry(bool pass, bool fail) {
   if (fail) {
     bitSet(status, 6);
   }
-  // add error telemetry here
+  // TODO: add error telemetry here
   Serial.write(status);
 
   // shaft rpm
@@ -360,10 +334,19 @@ void sendTelemetry(bool pass, bool fail) {
 // returns true if we had a successful calculation, false if not
 bool calculateRpm() {
 
+  // timeout check
+  if (shaftRpmUpdateReady && ((micros() - shaftHallMicrosCurrent) > shaftRpmTimeout)) {
+    shaftRpmUpdateReady = false;
+    shaftRpmCurrent = 0;
+    shaftRpmCurrentRounded = 0;
+  }
+
   if (!shaftRpmUpdateReady) { return false; }   // immediately return false if we're not ready to update
 
-  shaftRpmTimeDelta = shaftHallMicrosCurrent - shaftHallMicrosLast;
-  shaftRpmCurrent = 60000000 / shaftRpmTimeDelta;
+  // update rpm
+  shaftRpmCurrent = 60000000 / (shaftHallMicrosCurrent - shaftHallMicrosLast);
+  shaftRpmCurrentRounded = (shaftRpmCurrent / shaftRpmRounding + (shaftRpmCurrent % shaftRpmRounding > 2)) * shaftRpmRounding;
+
   return true;
 
 }
