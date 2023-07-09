@@ -2,9 +2,10 @@
 
 // Pin Config
 #define                 SHAFT_HALL_PICKUP_PIN             2
+#define                 WATER_PUMP_SPEED_PIN              3   // future use
+#define                 OUTLET_TEMP_PIN                   4
 #define                 INLET_SERVO_PIN                   5
 #define                 OUTLET_SERVO_PIN                  6
-#define                 OUTLET_TEMP_ANALOG_PIN            0
 #define                 LOADCELL_CLOCK_PIN                7
 #define                 LOADCELL_DATA_PIN                 8
 
