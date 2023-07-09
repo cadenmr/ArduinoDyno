@@ -1,5 +1,3 @@
-#include <ArduPID.h>
-
 // Pin Config
 #define                 SHAFT_HALL_PICKUP_PIN             2
 #define                 WATER_PUMP_SPEED_PIN              3   // future use
@@ -69,12 +67,22 @@ byte * forcePtr = (byte *) &loadCellForceCurrent;
 // Internal Objects
 bool configured = false;
 
+// imports
+#include <ArduPID.h>
+#include <HX711.h>
+
 ArduPID inletController;
 ArduPID outletController;
 
+HX711 torqueSensor;
+
 void setup() {
   
+  // initialize comms 
   Serial.begin(115200);
+
+  // initialize all sensors
+  torqueSensor.begin(LOADCELL_DATA_PIN, LOADCELL_CLOCK_PIN);
 
   // load all config values from pc until we are ready to start up
   while (!configured) {
@@ -208,8 +216,6 @@ void parseIncomingSerial() {
     } else {
       sendTelemetry(false, true);
     }
-
-    sendTelemetry(true, false);
 
   } else if (commandByte == 0x0C) {   // set outlet kp
 
