@@ -14,7 +14,7 @@
 // Shaft Speed config
 unsigned int            shaftRpmMaximum                   = 9000;
 unsigned int            shaftRpmMaximumHyst               = 300;
-byte                    shaftRpmAvgConst                  = 3;
+// byte                    shaftRpmAvgConst                  = 3;
 byte                    shaftRpmRounding                  = 50;
 unsigned int            shaftRpmRunningThreshold          = shaftRpmMaximum;
 unsigned long           shaftRpmTimeout                   = 2000000;
@@ -41,6 +41,7 @@ unsigned int            loadCellFactor                    = 0;
 
 // Shaft Speed Control
 unsigned int            shaftRpmCurrent                   = 0;
+unsigned int            shaftRpmCurrentRounded            = 0;
 unsigned int            shaftRpmDesired                   = shaftRpmMaximum;
 volatile unsigned long  shaftHallMicrosCurrent            = 0;
 volatile unsigned long  shaftHallMicrosLast               = 0;
@@ -62,13 +63,37 @@ byte                    outletTemperatureCurrent          = 0;
 // Load Measurement
 unsigned int            loadCellForceCurrent              = 0;
 
+// Internal Objects
+ArduPID inletController;
+ArduPID outletController;
+
 void setup() {
   
   Serial.begin(115200);
 
   while (!Serial) { ; } // wait for connection
 
+  // TODO: load all values from the PC before continuing
+
   attachInterrupt(digitalPinToInterrupt(SHAFT_HALL_PICKUP_PIN), hallInterrupt, FALLING);
+
+  analogWrite(INLET_SERVO_PIN, 0);
+  analogWrite(OUTLET_SERVO_PIN, 0);
+
+  // inletController.begin(&shaftRpmCurrent, &inletDutyDesired, &shaftRpmDesired, inletPidKp, inletPidKi, inletPidKd);
+  // outletController.begin();
+
+  // if (inletOverrideActive) {
+  //   inletController.stop();
+  // } else {
+  //   inletController.start();
+  // }
+
+  // if (outletOverrideActive) {
+  //   outletController.stop();
+  // } else {
+  //   outletController.start();
+  // }
 
 }
 
@@ -79,6 +104,14 @@ void loop() {
   if (Serial.available() >= INCOMING_PACKET_SIZE_BYTES) { parseIncomingSerial(); }
 
   // Read/compute sensor data
+
+  if (shaftRpmUpdateReady) {
+
+    shaftRpmCurrent = 60000000 / (shaftHallMicrosCurrent - shaftHallMicrosLast);
+    shaftRpmCurrentRounded = (shaftRpmCurrent / shaftRpmRounding + (shaftRpmCurrent % shaftRpmRounding > 2)) * shaftRpmRounding;
+
+  }
+
 
   // Check for failure cases
 
