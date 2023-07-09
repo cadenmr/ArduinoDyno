@@ -83,7 +83,7 @@ void setup() {
 
   // TODO: load all values from the PC before continuing
 
-  while (!configured || true) {
+  while (!configured) {
 
     if (Serial.available() >= INCOMING_PACKET_SIZE_BYTES) { parseIncomingSerial(); }
 
