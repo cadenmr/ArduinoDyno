@@ -113,6 +113,7 @@ void loop() {
 
   // Read/compute sensor data
 
+  // RPM
   if (shaftRpmUpdateReady && ((micros() - shaftHallMicrosCurrent) > shaftRpmTimeout)) {
 
     shaftRpmUpdateReady = false;
@@ -128,12 +129,18 @@ void loop() {
 
   }
 
+  // Temperature
+
+  // Load Cell
+
+
+
 
   // Check for failure cases
 
   // Recalculate pid
 
-  // 
+  // Set outputs
 
 }
 
@@ -325,10 +332,12 @@ void parseIncomingSerial() {
       break;
 
     case 22:  // telemetry request (no data)
+      shredSerialData(5);
       sendTelemetry(false, false);
       break;
 
     case 23:  // set configured
+      shredSerialData(5);
       configured = true;
       sendTelemetry(true, false);
       break;
