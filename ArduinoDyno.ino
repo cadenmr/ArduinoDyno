@@ -81,7 +81,8 @@ ArduPID outletController;
 HX711 torqueSensor;
 
 OneWire oneWire(OUTLET_TEMP_PIN);
-DallasTemperature outletTempSensor(&oneWire);
+DallasTemperature dallasTempSensors(&oneWire);
+DeviceAddress outletTempSensorAddress;
 
 void setup() {
   
@@ -90,7 +91,15 @@ void setup() {
 
   // initialize all sensors
   torqueSensor.begin(LOADCELL_DATA_PIN, LOADCELL_CLOCK_PIN);
-  outletTempSensor.begin();
+  // TODO: handle sensor not found error
+
+  dallasTempSensors.begin();
+  
+  if (!dallasTempSensors.getAddress(outletTempSensorAddress, 0)) {
+    // TODO: handle sensor not found error
+  }
+
+  // TODO: decide if we need to change the bit width of sensor data here
 
   // load all config values from pc until we are ready to start up
   while (!configured) {
@@ -130,8 +139,11 @@ void loop() {
   calculateRpm();
 
   // Temperature
-  outletTempSensor.requestTemperatures();
-
+  dallasTempSensors.requestTemperatures();
+  outletTemperatureCurrent = dallasTempSensors.getTempC(outletTempSensorAddress);
+  if (outletTemperatureCurrent == DEVICE_DISCONNECTED_C) {
+    // TODO: handle this error
+  }
 
   // Load Cell
   if (torqueSensor.wait_ready_timeout(6)) {

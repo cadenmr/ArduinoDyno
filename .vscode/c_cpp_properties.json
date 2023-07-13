@@ -21,6 +21,8 @@
                 "/home/caden/Arduino/libraries/ArduPID/src",
                 "/home/caden/Arduino/libraries/FireTimer/src",
                 "/home/caden/Arduino/libraries/HX711",
+                "/home/caden/Arduino/libraries/OneWire",
+                "/home/caden/Arduino/libraries/DallasTemperature",
                 "/home/caden/.arduino15/packages/arduino/tools/avr-gcc/7.3.0-atmel3.6.1-arduino7/lib/gcc/avr/7.3.0/include",
                 "/home/caden/.arduino15/packages/arduino/tools/avr-gcc/7.3.0-atmel3.6.1-arduino7/lib/gcc/avr/7.3.0/include-fixed",
                 "/home/caden/.arduino15/packages/arduino/tools/avr-gcc/7.3.0-atmel3.6.1-arduino7/avr/include"
