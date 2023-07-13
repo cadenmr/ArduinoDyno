@@ -62,7 +62,7 @@ bool                    outletOverrideActive              = false;
 byte                    outletTemperatureCurrent          = 255;
 
 // Load Measurement
-unsigned int            loadCellForceCurrent              = 0;
+float                   loadCellForceCurrent              = 0;
 byte * forcePtr = (byte *) &loadCellForceCurrent;
 
 // Internal Objects
@@ -125,6 +125,12 @@ void loop() {
   // Temperature
 
   // Load Cell
+  if (torqueSensor.wait_ready_timeout(6)) {
+    loadCellForceCurrent = torqueSensor.get_units(3);   // todo: see if this is a good value to avg
+  } else {  // sensor not found
+    loadCellForceCurrent = 0;
+    // TODO: error handling
+  }
 
   // Check for failure cases
 
@@ -315,6 +321,7 @@ void parseIncomingSerial() {
 
 }
 
+// 10 bytes
 void sendTelemetry(bool pass, bool fail) {
 
   // status
@@ -334,7 +341,7 @@ void sendTelemetry(bool pass, bool fail) {
   Serial.write(rpmPtr, 2);
 
   // measured load cell force
-  Serial.write(forcePtr, 2);
+  Serial.write(forcePtr, 4);
 
   // inlet duty cycle
   Serial.write(inletDutyDesired);
