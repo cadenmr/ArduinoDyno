@@ -36,7 +36,7 @@ byte                    outletMaxTemperature              = 50;
 // Measurement Config
 byte                    loadCellAvgConst                  = 3;
 byte                    loadCellResolution                = 128;
-unsigned int            loadCellFactor                    = 0;
+long                    loadCellFactor                    = 0;
 
 // Shaft Speed Control
 unsigned int            shaftRpmCurrent                   = 0;
@@ -69,7 +69,7 @@ bool configured = false;
 
 // imports
 #include <ArduPID.h>
-#include <HX711.h>
+#include <HX711.h>  // use robtillaart library
 
 ArduPID inletController;
 ArduPID outletController;
