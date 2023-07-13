@@ -40,8 +40,8 @@ unsigned long           loadCellOffset                    = 0;
 double                  loadCellScale                     = 0;
 
 // Shaft Speed Control
-unsigned int            shaftRpmCurrent                   = 0;
-unsigned int            shaftRpmCurrentRounded            = 0;
+unsigned int            shaftRpmCurrent                   = 256;
+unsigned int            shaftRpmCurrentRounded            = 256;
 byte * rpmPtr                                             = (byte *) &shaftRpmCurrentRounded;
 unsigned int            shaftRpmDesired                   = shaftRpmMaximum;
 volatile unsigned long  shaftHallMicrosCurrent            = 0;
@@ -59,10 +59,11 @@ bool                    inletOverrideActive               = false;
 // byte                    outletDutyCurrent                 = 0;
 byte                    outletDutyDesired                 = outletMinDuty;
 bool                    outletOverrideActive              = false;
-byte                    outletTemperatureCurrent          = 255;
+float                    outletTemperatureCurrent          = 255.99;
+byte * outletTempCurrentPtr                               = (byte *) &outletTemperatureCurrent;
 
 // Load Measurement
-float                   loadCellForceCurrent              = 0;
+double                  loadCellForceCurrent              = 255.99;
 byte * forcePtr = (byte *) &loadCellForceCurrent;
 
 // Internal Objects
@@ -71,11 +72,16 @@ bool configured = false;
 // imports
 #include <ArduPID.h>
 #include <HX711.h>  // use robtillaart library
+#include <OneWire.h>
+#include <DallasTemperature.h>
 
 ArduPID inletController;
 ArduPID outletController;
 
 HX711 torqueSensor;
+
+OneWire oneWire(OUTLET_TEMP_PIN);
+DallasTemperature outletTempSensor(&oneWire);
 
 void setup() {
   
@@ -84,6 +90,7 @@ void setup() {
 
   // initialize all sensors
   torqueSensor.begin(LOADCELL_DATA_PIN, LOADCELL_CLOCK_PIN);
+  outletTempSensor.begin();
 
   // load all config values from pc until we are ready to start up
   while (!configured) {
@@ -123,6 +130,8 @@ void loop() {
   calculateRpm();
 
   // Temperature
+  outletTempSensor.requestTemperatures();
+
 
   // Load Cell
   if (torqueSensor.wait_ready_timeout(6)) {
@@ -335,6 +344,11 @@ void sendTelemetry(bool pass, bool fail) {
     bitSet(status, 6);
   }
   // TODO: add error telemetry here
+
+  if (!configured) {
+    status += 0x01;
+  }
+  
   Serial.write(status);
 
   // shaft rpm
@@ -349,8 +363,8 @@ void sendTelemetry(bool pass, bool fail) {
   // outlet duty cycle
   Serial.write(outletDutyDesired);
 
-  // outlet water temperature
-  Serial.write(outletTemperatureCurrent);
+  // outlet water temperatur
+  Serial.write(outletTempCurrentPtr, 4);
 
 }
 
