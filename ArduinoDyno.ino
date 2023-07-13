@@ -113,21 +113,6 @@ void setup() {
   analogWrite(INLET_SERVO_PIN, 0);
   analogWrite(OUTLET_SERVO_PIN, 0);
 
-  // inletController.begin(&shaftRpmCurrent, &inletDutyDesired, &shaftRpmDesired, inletPidKp, inletPidKi, inletPidKd);
-  // outletController.begin();
-
-  // if (inletOverrideActive) {
-  //   inletController.stop();
-  // } else {
-  //   inletController.start();
-  // }
-
-  // if (outletOverrideActive) {
-  //   outletController.stop();
-  // } else {
-  //   outletController.start();
-  // }
-
 }
 
 void loop() {
