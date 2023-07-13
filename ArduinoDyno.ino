@@ -36,7 +36,8 @@ byte                    outletMaxTemperature              = 50;
 // Measurement Config
 byte                    loadCellAvgConst                  = 3;
 byte                    loadCellResolution                = 128;
-unsigned long           loadCellFactor                    = 0;
+unsigned long           loadCellOffset                    = 0;
+double                  loadCellScale                     = 0;
 
 // Shaft Speed Control
 unsigned int            shaftRpmCurrent                   = 0;
@@ -280,23 +281,31 @@ void parseIncomingSerial() {
     if (tempResolution == 64 || tempResolution == 128 ) {
 
       loadCellResolution = tempResolution;
+      torqueSensor.set_gain(loadCellResolution, false);
       sendTelemetry(true, false);
 
     } else {
       sendTelemetry(false, true);
     }
 
-  } else if (commandByte == 0x15) {   // set load cell factor
+  } else if (commandByte == 0x15) {   // set load cell offset
 
-    loadCellFactor = serialDataToUnsignedInt();
+    loadCellOffset = serialDataToUnsignedLong();
+    torqueSensor.set_offset(loadCellOffset);
     sendTelemetry(true, false);
 
-  } else if (commandByte == 0x16) {   // telemetry request (no data)
+  } else if (commandByte == 0x16) {   // set load cell scale
+
+    loadCellScale = serialDataToDouble();
+    torqueSensor.set_scale(loadCellScale);
+    sendTelemetry(true, false);
+
+  } else if (commandByte == 0x17) {   // telemetry request (no data)
 
     shredSerialData(5);
     sendTelemetry(false, false);
 
-  } else if (commandByte == 0x17) {   // set configured bit
+  } else if (commandByte == 0x18) {   // set configured bit
 
     shredSerialData(5);
     configured = true;
