@@ -36,7 +36,7 @@ byte                    outletMaxTemperature              = 50;
 // Measurement Config
 byte                    loadCellAvgConst                  = 3;
 byte                    loadCellResolution                = 128;
-long                    loadCellFactor                    = 0;
+unsigned long           loadCellFactor                    = 0;
 
 // Shaft Speed Control
 unsigned int            shaftRpmCurrent                   = 0;
