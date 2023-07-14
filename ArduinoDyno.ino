@@ -22,6 +22,8 @@ unsigned long           shaftRpmTimeout                   = 2000000;
 double                  inletPidKp                        = 0;
 double                  inletPidKi                        = 0;
 double                  inletPidKd                        = 0;
+double                  inletPidIMin                      = 0;
+double                  inletPidIMax                      = 0;
 byte                    inletMinDuty                      = 10;
 byte                    inletMaxDuty                      = 90;
 
@@ -29,6 +31,8 @@ byte                    inletMaxDuty                      = 90;
 double                  outletPidKp                       = 0;
 double                  outletPidKi                       = 0;
 double                  outletPidKd                       = 0;
+double                  outletPidIMin                     = 0;
+double                  outletPidIMax                     = 0;
 byte                    outletMinDuty                     = 10;
 byte                    outletMaxDuty                     = 90;
 byte                    outletMaxTemperature              = 50;
@@ -110,8 +114,18 @@ void setup() {
 
   attachInterrupt(digitalPinToInterrupt(SHAFT_HALL_PICKUP_PIN), hallInterrupt, FALLING);
 
-  analogWrite(INLET_SERVO_PIN, 0);
-  analogWrite(OUTLET_SERVO_PIN, 0);
+  // initialize PID
+  inletController.begin((double*)&shaftRpmCurrent, (double*)&inletDutyDesired, (double*)&shaftRpmDesired, inletPidKp, inletPidKi, inletPidKd);
+  outletController.begin((double*)&outletTemperatureCurrent, (double*)&outletDutyDesired, (double*)&outletMaxTemperature, outletPidKp, outletPidKi, outletPidKd);
+  inletController.setOutputLimits((double)inletMinDuty, (double)inletMaxDuty);
+  outletController.setOutputLimits((double)outletMinDuty, (double)inletMaxDuty);
+  inletController.setWindUpLimits(inletPidIMin, inletPidIMax);
+  outletController.setWindUpLimits(outletPidIMin, outletPidIMax);
+  inletController.reverse();
+  outletController.reverse();
+
+  analogWrite(INLET_SERVO_PIN, inletMinDuty);
+  analogWrite(OUTLET_SERVO_PIN, outletMinDuty);
 
 }
 
