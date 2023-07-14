@@ -35,7 +35,7 @@ double                  outletPidIMin                     = 0;
 double                  outletPidIMax                     = 0;
 byte                    outletMinDuty                     = 10;
 byte                    outletMaxDuty                     = 90;
-byte                    outletMaxTemperature              = 50;
+byte                    outletTemperatureDesired              = 50;
 
 // Measurement Config
 byte                    loadCellAvgConst                  = 3;
@@ -116,7 +116,7 @@ void setup() {
 
   // initialize PID
   inletController.begin((double*)&shaftRpmCurrent, (double*)&inletDutyDesired, (double*)&shaftRpmDesired, inletPidKp, inletPidKi, inletPidKd);
-  outletController.begin((double*)&outletTemperatureCurrent, (double*)&outletDutyDesired, (double*)&outletMaxTemperature, outletPidKp, outletPidKi, outletPidKd);
+  outletController.begin((double*)&outletTemperatureCurrent, (double*)&outletDutyDesired, (double*)&outletTemperatureDesired, outletPidKp, outletPidKi, outletPidKd);
   inletController.setOutputLimits((double)inletMinDuty, (double)inletMaxDuty);
   outletController.setOutputLimits((double)outletMinDuty, (double)inletMaxDuty);
   inletController.setWindUpLimits(inletPidIMin, inletPidIMax);
@@ -333,7 +333,7 @@ void parseIncomingSerial() {
 
   } else if (commandByte == 0x15) {   // set outlet target temperature
 
-    outletMaxTemperature = serialDataToByte();
+    outletTemperatureDesired = serialDataToByte();
     sendTelemetry(true, false);
 
   } else if (commandByte == 0x16) {   // enable/disable outlet override
