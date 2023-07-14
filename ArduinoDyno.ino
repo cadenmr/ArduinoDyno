@@ -279,16 +279,19 @@ void parseIncomingSerial() {
   } else if (commandByte == 0x0E) {   // set outlet kp
 
     outletPidKp = serialDataToDouble();
+    outletController.setCoefficients(outletPidKp, outletPidKi, outletPidKd);
     sendTelemetry(true, false);
 
   } else if (commandByte == 0x0F) {   // set outlet ki
 
     outletPidKi = serialDataToDouble();
+    outletController.setCoefficients(outletPidKp, outletPidKi, outletPidKd);
     sendTelemetry(true, false);
 
   } else if (commandByte == 0x10) {   // set outlet kd
 
     outletPidKd = serialDataToDouble();
+    outletController.setCoefficients(outletPidKp, outletPidKi, outletPidKd);
     sendTelemetry(true, false);
 
   } else if (commandByte == 0x11) {   // set outlet integrator minimum
@@ -312,6 +315,7 @@ void parseIncomingSerial() {
       sendTelemetry(false, true);
     } else {
       outletMinDuty = tempOutletMinDuty;
+      outletController.setOutputLimits(outletMinDuty, outletMaxDuty);
       sendTelemetry(true, false);
     }
 
@@ -323,6 +327,7 @@ void parseIncomingSerial() {
       sendTelemetry(false, true);
     } else {
       outletMaxDuty = tempOutletMaxDuty;
+      outletController.setOutputLimits(outletMinDuty, outletMaxDuty);
       sendTelemetry(true, false);
     }
 
