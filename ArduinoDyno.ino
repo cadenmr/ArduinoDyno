@@ -204,16 +204,19 @@ void parseIncomingSerial() {
   } else if (commandByte == 0x05) {   // set inlet kp
 
     inletPidKp = serialDataToDouble();
+    inletController.setCoefficients(inletPidKp, inletPidKi, inletPidKd);
     sendTelemetry(true, false);
 
   } else if (commandByte == 0x06) {   // set inlet ki
 
     inletPidKi = serialDataToDouble();
+    inletController.setCoefficients(inletPidKp, inletPidKi, inletPidKd);
     sendTelemetry(true, false);
 
   } else if (commandByte == 0x07) {   // set inlet kd
 
     inletPidKd = serialDataToDouble();
+    inletController.setCoefficients(inletPidKp, inletPidKi, inletPidKd);
     sendTelemetry(true, false);
 
   } else if (commandByte == 0x08) {   // set inlet integrator limit minimum
@@ -236,6 +239,7 @@ void parseIncomingSerial() {
       sendTelemetry(false, true);
     } else {
       inletMinDuty = tempInletMinDuty;
+      inletController.setOutputLimits((double)inletMinDuty, (double)inletMaxDuty);
       sendTelemetry(true, false);
     }
 
@@ -247,6 +251,7 @@ void parseIncomingSerial() {
       sendTelemetry(false, true);
     } else {
       inletMaxDuty = tempInletMaxDuty;
+      inletController.setOutputLimits((double)inletMinDuty, (double)inletMaxDuty);
       sendTelemetry(true, false);
     }
 
