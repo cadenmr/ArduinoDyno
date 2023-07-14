@@ -130,14 +130,12 @@ void loop() {
 
   // Read/compute sensor data
   calculateRpm();
-
   // Temperature
   dallasTempSensors.requestTemperatures();
   outletTemperatureCurrent = dallasTempSensors.getTempC(outletTempSensorAddress);
   if (outletTemperatureCurrent == DEVICE_DISCONNECTED_C) {
     // TODO: handle this error
   }
-
   // Load Cell
   if (torqueSensor.wait_ready_timeout(6)) {
     loadCellForceCurrent = torqueSensor.get_units(3);   // todo: see if this is a good value to avg
