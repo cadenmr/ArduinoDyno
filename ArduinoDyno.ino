@@ -96,14 +96,20 @@ void setup() {
   // initialize all sensors
   torqueSensor.begin(LOADCELL_DATA_PIN, LOADCELL_CLOCK_PIN);
   // TODO: handle sensor not found error
-
   dallasTempSensors.begin();
-  
   if (!dallasTempSensors.getAddress(outletTempSensorAddress, 0)) {
     // TODO: handle sensor not found error
   }
 
-  // TODO: decide if we need to change the bit width of sensor data here
+  // initialize outputs
+  analogWrite(INLET_SERVO_PIN, inletMinDuty);
+  analogWrite(OUTLET_SERVO_PIN, outletMinDuty);
+
+  // initialize PID
+  inletController.begin((double*)&shaftRpmCurrent, (double*)&inletDutyDesired, (double*)&shaftRpmDesired, inletPidKp, inletPidKi, inletPidKd);
+  outletController.begin((double*)&outletTemperatureCurrent, (double*)&outletDutyDesired, (double*)&outletTemperatureDesired, outletPidKp, outletPidKi, outletPidKd);
+  inletController.reverse();
+  outletController.reverse();
 
   // load all config values from pc until we are ready to start up
   while (!configured) {
@@ -112,20 +118,8 @@ void setup() {
 
   }
 
+  // start reading RPM
   attachInterrupt(digitalPinToInterrupt(SHAFT_HALL_PICKUP_PIN), hallInterrupt, FALLING);
-
-  // initialize PID
-  inletController.begin((double*)&shaftRpmCurrent, (double*)&inletDutyDesired, (double*)&shaftRpmDesired, inletPidKp, inletPidKi, inletPidKd);
-  outletController.begin((double*)&outletTemperatureCurrent, (double*)&outletDutyDesired, (double*)&outletTemperatureDesired, outletPidKp, outletPidKi, outletPidKd);
-  inletController.setOutputLimits((double)inletMinDuty, (double)inletMaxDuty);
-  outletController.setOutputLimits((double)outletMinDuty, (double)inletMaxDuty);
-  inletController.setWindUpLimits(inletPidIMin, inletPidIMax);
-  outletController.setWindUpLimits(outletPidIMin, outletPidIMax);
-  inletController.reverse();
-  outletController.reverse();
-
-  analogWrite(INLET_SERVO_PIN, inletMinDuty);
-  analogWrite(OUTLET_SERVO_PIN, outletMinDuty);
 
 }
 
