@@ -208,7 +208,19 @@ void parseIncomingSerial() {
     inletPidKd = serialDataToDouble();
     sendTelemetry(true, false);
 
-  } else if (commandByte == 0x08) {   // set inlet min duty
+  } else if (commandByte == 0x08) {   // set inlet integrator limit minimum
+
+    inletPidIMin = serialDataToDouble();
+    inletController.setWindUpLimits(inletPidIMin, inletPidIMax);
+    sendTelemetry(true, false);
+
+  } else if (commandByte == 0x09) {   // set inlet integrator limit maximum
+
+    inletPidIMax = serialDataToDouble();
+    inletController.setWindUpLimits(inletPidIMin, inletPidIMax);
+    sendTelemetry(true, false);
+
+  } else if (commandByte == 0x0A) {   // set inlet min duty
 
     byte tempInletMinDuty = serialDataToByte();
 
@@ -219,7 +231,7 @@ void parseIncomingSerial() {
       sendTelemetry(true, false);
     }
 
-  } else if (commandByte == 0x09) {   // set inlet max duty
+  } else if (commandByte == 0x0B) {   // set inlet max duty
 
     byte tempInletMaxDuty = serialDataToByte();
 
@@ -230,12 +242,12 @@ void parseIncomingSerial() {
       sendTelemetry(true, false);
     }
 
-  } else if (commandByte == 0x0A) {   // enable/disable inlet override
+  } else if (commandByte == 0x0C) {   // enable/disable inlet override
 
     inletOverrideActive = serialDataToBoolean();
     sendTelemetry(true, false);
 
-  } else if (commandByte == 0x0B) {   // set inlet override duty cycle
+  } else if (commandByte == 0x0D) {   // set inlet override duty cycle
 
     if (inletOverrideActive) {
       inletDutyDesired = serialDataToByte();
@@ -244,22 +256,35 @@ void parseIncomingSerial() {
       sendTelemetry(false, true);
     }
 
-  } else if (commandByte == 0x0C) {   // set outlet kp
+  } else if (commandByte == 0x0E) {   // set outlet kp
 
     outletPidKp = serialDataToDouble();
     sendTelemetry(true, false);
 
-  } else if (commandByte == 0x0D) {   // set outlet ki
+  } else if (commandByte == 0x0F) {   // set outlet ki
 
     outletPidKi = serialDataToDouble();
     sendTelemetry(true, false);
 
-  } else if (commandByte == 0x0E) {   // set outlet kd
+  } else if (commandByte == 0x10) {   // set outlet kd
 
     outletPidKd = serialDataToDouble();
     sendTelemetry(true, false);
 
-  } else if (commandByte == 0x0F) {   // set outlet min duty
+  } else if (commandByte == 0x11) {   // set outlet integrator minimum
+
+    outletPidIMin = serialDataToDouble();
+    outletController.setWindUpLimits(outletPidIMin, outletPidIMax);
+    sendTelemetry(true, false);
+
+  } else if (commandByte == 0x12) {   // set outlet integrator maximum
+
+  outletPidIMax = serialDataToDouble();
+  outletController.setWindUpLimits(outletPidIMin, outletPidIMax);
+  sendTelemetry(true, false);
+
+
+  } else if (commandByte == 0x13) {   // set outlet min duty
 
     byte tempOutletMinDuty = serialDataToByte();
 
@@ -270,7 +295,7 @@ void parseIncomingSerial() {
       sendTelemetry(true, false);
     }
 
-  } else if (commandByte == 0x10) {   // set outlet max duty
+  } else if (commandByte == 0x14) {   // set outlet max duty
 
     byte tempOutletMaxDuty = serialDataToByte();
 
@@ -281,17 +306,17 @@ void parseIncomingSerial() {
       sendTelemetry(true, false);
     }
 
-  } else if (commandByte == 0x11) {   // set outlet target temperature
+  } else if (commandByte == 0x15) {   // set outlet target temperature
 
     outletMaxTemperature = serialDataToByte();
     sendTelemetry(true, false);
 
-  } else if (commandByte == 0x12) {   // enable/disable outlet override
+  } else if (commandByte == 0x16) {   // enable/disable outlet override
 
     outletOverrideActive = serialDataToBoolean();
     sendTelemetry(true, false);
 
-  } else if (commandByte == 0x13) {   // set outlet override duty cycle
+  } else if (commandByte == 0x17) {   // set outlet override duty cycle
 
     if (outletOverrideActive) {
       outletDutyDesired = serialDataToByte();
@@ -300,7 +325,7 @@ void parseIncomingSerial() {
       sendTelemetry(false, true);
     }
 
-  } else if (commandByte == 0x14) {   // set load cell resolution
+  } else if (commandByte == 0x18) {   // set load cell resolution
 
     byte tempResolution = serialDataToByte();
 
@@ -314,24 +339,24 @@ void parseIncomingSerial() {
       sendTelemetry(false, true);
     }
 
-  } else if (commandByte == 0x15) {   // set load cell offset
+  } else if (commandByte == 0x19) {   // set load cell offset
 
     loadCellOffset = serialDataToUnsignedLong();
     torqueSensor.set_offset(loadCellOffset);
     sendTelemetry(true, false);
 
-  } else if (commandByte == 0x16) {   // set load cell scale
+  } else if (commandByte == 0x1A) {   // set load cell scale
 
     loadCellScale = serialDataToDouble();
     torqueSensor.set_scale(loadCellScale);
     sendTelemetry(true, false);
 
-  } else if (commandByte == 0x17) {   // telemetry request (no data)
+  } else if (commandByte == 0x1B) {   // telemetry request (no data)
 
     shredSerialData(5);
     sendTelemetry(false, false);
 
-  } else if (commandByte == 0x18) {   // set configured bit
+  } else if (commandByte == 0x1C) {   // set configured bit
 
     shredSerialData(5);
     configured = true;
