@@ -72,6 +72,7 @@ byte * forcePtr = (byte *) &loadCellForceCurrent;
 
 // Internal Objects
 bool configured = false;
+bool critical = true;
 
 // imports
 #include <ArduPID.h>
@@ -117,6 +118,8 @@ void setup() {
     if (Serial.available() >= INCOMING_PACKET_SIZE_BYTES) { parseIncomingSerial(); }
 
   }
+
+  critical = false;
 
   // start reading RPM
   attachInterrupt(digitalPinToInterrupt(SHAFT_HALL_PICKUP_PIN), hallInterrupt, FALLING);
@@ -399,6 +402,11 @@ void sendTelemetry(bool pass, bool fail) {
   if (fail) {
     bitSet(status, 6);
   }
+
+  if (critical) {
+    bitSet(status, 4);
+  }
+
   // TODO: add error telemetry here
 
   if (!configured) {
