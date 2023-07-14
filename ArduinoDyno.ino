@@ -156,6 +156,14 @@ void loop() {
 
   // Recalculate pid
 
+  if (!inletOverrideActive) {
+
+  }
+
+  if (!outletOverrideActive) {
+
+  }
+
   // Set outputs
 
 }
@@ -245,6 +253,13 @@ void parseIncomingSerial() {
   } else if (commandByte == 0x0C) {   // enable/disable inlet override
 
     inletOverrideActive = serialDataToBoolean();
+    
+    if (inletOverrideActive) {
+      inletController.stop();
+    } else {
+      inletController.start();
+    }
+
     sendTelemetry(true, false);
 
   } else if (commandByte == 0x0D) {   // set inlet override duty cycle
@@ -314,6 +329,13 @@ void parseIncomingSerial() {
   } else if (commandByte == 0x16) {   // enable/disable outlet override
 
     outletOverrideActive = serialDataToBoolean();
+
+    if (outletOverrideActive) {
+      outletController.stop();
+    } else {
+      outletController.start();
+    }
+
     sendTelemetry(true, false);
 
   } else if (commandByte == 0x17) {   // set outlet override duty cycle
