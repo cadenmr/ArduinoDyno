@@ -144,19 +144,15 @@ void loop() {
     // TODO: error handling
   }
 
-  // Check for failure cases
+  // TODO: Check for failure cases
 
   // Recalculate pid
-
-  if (!inletOverrideActive) {
-
-  }
-
-  if (!outletOverrideActive) {
-
-  }
+  if (!inletOverrideActive) { inletController.compute(); }
+  if (!outletOverrideActive) { outletController.compute(); }
 
   // Set outputs
+  analogWrite(INLET_SERVO_PIN, inletDutyDesired);
+  analogWrite(OUTLET_SERVO_PIN, outletDutyDesired);
 
 }
 
