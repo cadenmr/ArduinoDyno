@@ -11,7 +11,7 @@
 #define                 INCOMING_PACKET_SIZE_BYTES        6
 
 // internal PID config
-#define                 PID_SAMPLE_RATE_MICROS            10000 // 100Hz pid rate
+#define                 PID_SAMPLE_RATE_MICROS            14280 // 70Hz pid rate
 
 // Shaft Speed config
 double                  shaftRpmMaximum                   = 9000;
@@ -87,6 +87,7 @@ void setup() {
 
   // initialize all sensors
   torqueSensor.begin(LOADCELL_DATA_PIN, LOADCELL_CLOCK_PIN);
+  torqueSensor.set_raw_mode();
   // TODO: handle sensor not found error
   dallasTempSensors.begin();
   if (!dallasTempSensors.getAddress(outletTempSensorAddress, 0)) {
@@ -134,20 +135,14 @@ void loop() {
   // if (outletTemperatureCurrent == DEVICE_DISCONNECTED_C) {
   //   // TODO: handle this error
   // }
+
   // Load Cell
-  loadCellForceCurrent = torqueSensor.get_units(1);    // TESTING REMOVE ME
-  // if (torqueSensor.wait_ready_timeout(6)) {
-  //   loadCellForceCurrent = torqueSensor.get_units(3);   // todo: see if this is a good value to avg
-  // } else {  // sensor not found
-  //   loadCellForceCurrent = 0;
-  //   // TODO: error handling
-  // }
+  loadCellForceCurrent = torqueSensor.get_units();
 
   // TODO: Check for failure cases
 
   // Recalculate pid (only works if enabled)
   // SUPREME ANTI-JITTER PID TIMING
-
   unsigned long currentMicros = micros();
   lastLoopTimeDelta = currentMicros - lastLoopTime;
   lastLoopTime = currentMicros;
