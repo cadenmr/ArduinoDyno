@@ -482,40 +482,22 @@ bool shaftRpmOverspeed() {
 
 void setInlet(int duty) {
 
-  int setDuty = map(duty, 0, 100, 0, 255);
+  int setDuty = duty;
+  if (setDuty < inletMinDuty ) { setDuty = inletMinDuty; }
+  if (setDuty > inletMaxDuty) { setDuty = inletMaxDuty; }
 
-  if (setDuty < inletMinDuty ) {
-
-    setDuty = inletMinDuty;
-
-  }
-
-  if (setDuty > inletMaxDuty) {
-
-    setDuty = inletMaxDuty;
-
-  }
-
+  setDuty = map(setDuty, 0, 100, 0, 255);
   analogWrite(INLET_SERVO_PIN, setDuty);
 
 }
 
 void setOutlet(int duty) {
 
-  int setDuty = map(duty, 0, 100, 0, 255);
+  int setDuty = duty;
+  if (setDuty < outletMinDuty ) { setDuty = outletMinDuty; }
+  if (setDuty > outletMaxDuty) { setDuty = outletMaxDuty; }
 
-  if (setDuty < outletMinDuty ) {
-
-    setDuty = outletMinDuty;
-
-  }
-
-  if (setDuty > outletMaxDuty) {
-
-    setDuty = outletMaxDuty;
-
-  }
-
+  setDuty = map(setDuty, 0, 100, 0, 255);
   analogWrite(OUTLET_SERVO_PIN, setDuty);
 
 }
