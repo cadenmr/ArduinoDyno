@@ -400,7 +400,7 @@ void sendTelemetry(bool pass, bool fail) {
   Serial.write(status);
 
   // shaft rpm
-  byte * rpmPtr = (byte *)shaftRpmCurrent;
+  byte * rpmPtr = (byte *)&shaftRpmCurrent;
   Serial.write(rpmPtr, 4);
 
   // measured load cell force
@@ -435,7 +435,7 @@ bool calculateRpm() {
 
   // update rpm
   shaftRpmCurrent = 60000000 / (shaftHallMicrosCurrent - shaftHallMicrosLast);
-  shaftRpmCurrentRounded = (shaftRpmCurrent / shaftRpmRounding + (shaftRpmCurrent % shaftRpmRounding > 2)) * shaftRpmRounding;
+  // shaftRpmCurrentRounded = (shaftRpmCurrent / shaftRpmRounding + (shaftRpmCurrent % shaftRpmRounding > 2)) * shaftRpmRounding;
 
   return true;
 
