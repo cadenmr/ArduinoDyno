@@ -87,8 +87,8 @@ void setup() {
   }
 
   // initialize outputs
-  analogWrite(INLET_SERVO_PIN, inletMinDuty);
-  analogWrite(OUTLET_SERVO_PIN, outletMinDuty);
+  setInlet(inletMinDuty);
+  setOutlet(outletMinDuty);
 
   // initialize PID
   inletController.begin(&shaftRpmCurrent, &inletDutyDesired, &shaftRpmDesired, inletPidKp, inletPidKi, inletPidKd);
