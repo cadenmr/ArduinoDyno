@@ -10,6 +10,9 @@
 // internal data formatting config
 #define                 INCOMING_PACKET_SIZE_BYTES        6
 
+// internal PID config
+#define                 PID_SAMPLE_RATE_MICROS            10000 // 100Hz pid rate
+
 // Shaft Speed config
 double                  shaftRpmMaximum                   = 9000;
 double                  shaftRpmMaximumHyst               = 300;
@@ -57,6 +60,10 @@ double                  loadCellForceCurrent              = 255.99;
 // Internal Objects
 bool configured = false;
 bool critical = true;
+
+unsigned long lastLoopTime = 0;
+unsigned long lastLoopTimeDelta = 0;
+unsigned long lastPidMicros = micros();
 
 // imports
 #include <ArduPID.h>
@@ -112,8 +119,6 @@ void setup() {
   // start reading RPM
   attachInterrupt(digitalPinToInterrupt(SHAFT_HALL_PICKUP_PIN), hallInterrupt, FALLING);
 
-  torqueSensor.set_raw_mode();    // TESTING REMOVE ME
-
 }
 
 void loop() {
@@ -130,7 +135,7 @@ void loop() {
   //   // TODO: handle this error
   // }
   // Load Cell
-  loadCellForceCurrent = torqueSensor.get_units();    // TESTING REMOVE ME
+  loadCellForceCurrent = torqueSensor.get_units(1);    // TESTING REMOVE ME
   // if (torqueSensor.wait_ready_timeout(6)) {
   //   loadCellForceCurrent = torqueSensor.get_units(3);   // todo: see if this is a good value to avg
   // } else {  // sensor not found
@@ -141,8 +146,22 @@ void loop() {
   // TODO: Check for failure cases
 
   // Recalculate pid (only works if enabled)
-  inletController.compute();
-  outletController.compute();
+  // SUPREME ANTI-JITTER PID TIMING
+
+  unsigned long currentMicros = micros();
+  lastLoopTimeDelta = currentMicros - lastLoopTime;
+  lastLoopTime = currentMicros;
+
+  if (!inletOverrideActive || !outletOverrideActive) {
+
+    if (micros() > (lastPidMicros + PID_SAMPLE_RATE_MICROS) || 
+        (micros() > (lastPidMicros + PID_SAMPLE_RATE_MICROS - lastLoopTimeDelta - 100))) {
+      inletController.compute();
+      outletController.compute();
+      lastPidMicros = micros();
+    }
+
+  }
 
   // Set outputs
   setInlet(inletDutyDesired);
