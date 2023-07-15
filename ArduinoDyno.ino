@@ -93,6 +93,10 @@ void setup() {
   // initialize PID
   inletController.begin(&shaftRpmCurrent, &inletDutyDesired, &shaftRpmDesired, inletPidKp, inletPidKi, inletPidKd);
   outletController.begin(&outletTemperatureCurrent, &outletDutyDesired, &outletTemperatureDesired, outletPidKp, outletPidKi, outletPidKd);
+  inletController.setOutputLimits(inletMinDuty, inletMaxDuty);
+  outletController.setOutputLimits(outletMinDuty, outletMaxDuty);
+  inletController.setWindUpLimits(inletPidIMin, inletPidIMax);
+  outletController.setWindUpLimits(outletPidIMin, outletPidIMax);
   inletController.reverse();
   outletController.reverse();
 
@@ -133,9 +137,9 @@ void loop() {
 
   // TODO: Check for failure cases
 
-  // Recalculate pid
-  if (!inletOverrideActive) { inletController.compute(); }
-  if (!outletOverrideActive) { outletController.compute(); }
+  // Recalculate pid (only works if enabled)
+  inletController.compute();
+  outletController.compute();
 
   // Set outputs
   analogWrite(INLET_SERVO_PIN, inletDutyDesired);
