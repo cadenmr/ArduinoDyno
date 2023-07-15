@@ -142,8 +142,8 @@ void loop() {
   outletController.compute();
 
   // Set outputs
-  analogWrite(INLET_SERVO_PIN, inletDutyDesired);
-  analogWrite(OUTLET_SERVO_PIN, outletDutyDesired);
+  setInlet(inletDutyDesired);
+  setOutlet(outletDutyDesired);
 
 }
 
@@ -480,9 +480,9 @@ bool shaftRpmOverspeed() {
 
 }
 
-void setInlet(int duty) {
+void setInlet(double duty) {
 
-  int setDuty = duty;
+  int setDuty = (int)duty;
   if (setDuty < inletMinDuty ) { setDuty = inletMinDuty; }
   if (setDuty > inletMaxDuty) { setDuty = inletMaxDuty; }
 
@@ -491,9 +491,9 @@ void setInlet(int duty) {
 
 }
 
-void setOutlet(int duty) {
+void setOutlet(double duty) {
 
-  int setDuty = duty;
+  int setDuty = (int)duty;
   if (setDuty < outletMinDuty ) { setDuty = outletMinDuty; }
   if (setDuty > outletMaxDuty) { setDuty = outletMaxDuty; }
 
