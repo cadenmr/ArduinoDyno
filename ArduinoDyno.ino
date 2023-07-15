@@ -11,6 +11,7 @@
 #define                 INCOMING_PACKET_SIZE_BYTES        6
 
 // internal PID config
+#define                 MAIN_LOOP_SAMPLE_RATE_MICROS      12821 // 75Hz main loop rate
 #define                 PID_SAMPLE_RATE_MICROS            14280 // 70Hz pid rate
 
 // Shaft Speed config
@@ -64,6 +65,8 @@ bool critical = true;
 unsigned long lastLoopTime = 0;
 unsigned long lastLoopTimeDelta = 0;
 unsigned long lastPidMicros = micros();
+
+bool microsOverflowed = false;
 
 // imports
 #include <ArduPID.h>
@@ -127,6 +130,9 @@ void loop() {
   // Check for serial comms + respond  + perform any special request + update variables
   if (Serial.available() >= INCOMING_PACKET_SIZE_BYTES) { parseIncomingSerial(); }
 
+  // main loop anti-jitter
+  while (micros() < lastLoopTime + MAIN_LOOP_SAMPLE_RATE_MICROS)
+
   // Read/compute sensor data -- FUNCTIONS DISABLED FOR TESTING
   calculateRpm();
   // Temperature
@@ -147,7 +153,14 @@ void loop() {
   lastLoopTimeDelta = currentMicros - lastLoopTime;
   lastLoopTime = currentMicros;
 
-  if (!inletOverrideActive || !outletOverrideActive) {
+  // handle overflow of micros()
+  if (lastLoopTime > currentMicros) {
+    microsOverflowed = true;
+  } else {
+    microsOverflowed = false;
+  }
+
+  if (!inletOverrideActive || !outletOverrideActive && !microsOverflowed) {
 
     if (micros() > (lastPidMicros + PID_SAMPLE_RATE_MICROS) || 
         (micros() > (lastPidMicros + PID_SAMPLE_RATE_MICROS - lastLoopTimeDelta - 100))) {
