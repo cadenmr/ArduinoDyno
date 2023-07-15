@@ -49,9 +49,9 @@ volatile bool           shaftRpmUpdateReady               = false;
 double                  inletDutyDesired                  = inletMinDuty;
 bool                    inletOverrideActive               = false;
 // Outlet Valve Control
-double                    outletDutyDesired                 = outletMinDuty;
+double                  outletDutyDesired                 = outletMinDuty;
 bool                    outletOverrideActive              = false;
-double                    outletTemperatureCurrent         = 255.99;
+double                  outletTemperatureCurrent         = 255.99;
 // Load Measurement
 double                  loadCellForceCurrent              = 255.99;
 // Internal Objects
@@ -112,6 +112,8 @@ void setup() {
   // start reading RPM
   attachInterrupt(digitalPinToInterrupt(SHAFT_HALL_PICKUP_PIN), hallInterrupt, FALLING);
 
+  torqueSensor.set_raw_mode();    // TESTING REMOVE ME
+
 }
 
 void loop() {
@@ -119,21 +121,22 @@ void loop() {
   // Check for serial comms + respond  + perform any special request + update variables
   if (Serial.available() >= INCOMING_PACKET_SIZE_BYTES) { parseIncomingSerial(); }
 
-  // Read/compute sensor data
+  // Read/compute sensor data -- FUNCTIONS DISABLED FOR TESTING
   calculateRpm();
   // Temperature
-  dallasTempSensors.requestTemperatures();
-  outletTemperatureCurrent = dallasTempSensors.getTempC(outletTempSensorAddress);
-  if (outletTemperatureCurrent == DEVICE_DISCONNECTED_C) {
-    // TODO: handle this error
-  }
+  // dallasTempSensors.requestTemperatures();
+  // outletTemperatureCurrent = dallasTempSensors.getTempC(outletTempSensorAddress);
+  // if (outletTemperatureCurrent == DEVICE_DISCONNECTED_C) {
+  //   // TODO: handle this error
+  // }
   // Load Cell
-  if (torqueSensor.wait_ready_timeout(6)) {
-    loadCellForceCurrent = torqueSensor.get_units(3);   // todo: see if this is a good value to avg
-  } else {  // sensor not found
-    loadCellForceCurrent = 0;
-    // TODO: error handling
-  }
+  loadCellForceCurrent = torqueSensor.get_units();    // TESTING REMOVE ME
+  // if (torqueSensor.wait_ready_timeout(6)) {
+  //   loadCellForceCurrent = torqueSensor.get_units(3);   // todo: see if this is a good value to avg
+  // } else {  // sensor not found
+  //   loadCellForceCurrent = 0;
+  //   // TODO: error handling
+  // }
 
   // TODO: Check for failure cases
 
@@ -312,7 +315,7 @@ void parseIncomingSerial() {
 
   } else if (commandByte == 0x15) {   // set outlet target temperature
 
-    outletTemperatureDesired = serialDataToByte();
+    outletTemperatureDesired = serialDataToDouble();
     sendTelemetry(true, false);
 
   } else if (commandByte == 0x16) {   // enable/disable outlet override
@@ -377,7 +380,7 @@ void parseIncomingSerial() {
 
 }
 
-// 15 bytes
+// 21 bytes
 void sendTelemetry(bool pass, bool fail) {
 
   // status
