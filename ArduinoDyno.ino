@@ -11,13 +11,11 @@
 #define                 INCOMING_PACKET_SIZE_BYTES        6
 
 // Shaft Speed config
-unsigned int            shaftRpmMaximum                   = 9000;
-unsigned int            shaftRpmMaximumHyst               = 300;
-// byte                    shaftRpmAvgConst                  = 3;
-byte                    shaftRpmRounding                  = 50;
-unsigned int            shaftRpmRunningThreshold          = shaftRpmMaximum;
+double                  shaftRpmMaximum                   = 9000;
+double                  shaftRpmMaximumHyst               = 300;
+double                  shaftRpmRounding                  = 50;
+double                  shaftRpmRunningThreshold          = shaftRpmMaximum;
 unsigned long           shaftRpmTimeout                   = 2000000;
-
 // Inlet Valve Config
 double                  inletPidKp                        = 0;
 double                  inletPidKi                        = 0;
@@ -26,7 +24,6 @@ double                  inletPidIMin                      = 0;
 double                  inletPidIMax                      = 0;
 byte                    inletMinDuty                      = 10;
 byte                    inletMaxDuty                      = 90;
-
 // Outlet Valve Config
 double                  outletPidKp                       = 0;
 double                  outletPidKi                       = 0;
@@ -35,41 +32,28 @@ double                  outletPidIMin                     = 0;
 double                  outletPidIMax                     = 0;
 byte                    outletMinDuty                     = 10;
 byte                    outletMaxDuty                     = 90;
-byte                    outletTemperatureDesired              = 50;
-
+double                  outletTemperatureDesired          = 50;
 // Measurement Config
 byte                    loadCellAvgConst                  = 3;
 byte                    loadCellResolution                = 128;
 unsigned long           loadCellOffset                    = 0;
 double                  loadCellScale                     = 0;
-
 // Shaft Speed Control
-unsigned int            shaftRpmCurrent                   = 256;
-unsigned int            shaftRpmCurrentRounded            = 256;
-byte * rpmPtr                                             = (byte *) &shaftRpmCurrentRounded;
-unsigned int            shaftRpmDesired                   = shaftRpmMaximum;
+double                  shaftRpmCurrent                   = 9999;
+double                  shaftRpmCurrentRounded            = 9999;
+double                  shaftRpmDesired                   = shaftRpmMaximum;
 volatile unsigned long  shaftHallMicrosCurrent            = 0;
 volatile unsigned long  shaftHallMicrosLast               = 0;
 volatile bool           shaftRpmUpdateReady               = false;
-// unsigned long           shaftRpmTimeDelta                 = 0;
-// unsigned long        shaftRpmReadings;                 // TODO: Implement this
-
 // Inlet Valve Control
-// byte                    inletDutyCurrent                  = 0;
-byte                    inletDutyDesired                  = inletMinDuty;
+double                  inletDutyDesired                  = inletMinDuty;
 bool                    inletOverrideActive               = false;
-
 // Outlet Valve Control
-// byte                    outletDutyCurrent                 = 0;
-byte                    outletDutyDesired                 = outletMinDuty;
+double                    outletDutyDesired                 = outletMinDuty;
 bool                    outletOverrideActive              = false;
-float                    outletTemperatureCurrent          = 255.99;
-byte * outletTempCurrentPtr                               = (byte *) &outletTemperatureCurrent;
-
+double                    outletTemperatureCurrent         = 255.99;
 // Load Measurement
 double                  loadCellForceCurrent              = 255.99;
-byte * forcePtr = (byte *) &loadCellForceCurrent;
-
 // Internal Objects
 bool configured = false;
 bool critical = true;
@@ -107,8 +91,8 @@ void setup() {
   analogWrite(OUTLET_SERVO_PIN, outletMinDuty);
 
   // initialize PID
-  inletController.begin((double*)&shaftRpmCurrent, (double*)&inletDutyDesired, (double*)&shaftRpmDesired, inletPidKp, inletPidKi, inletPidKd);
-  outletController.begin((double*)&outletTemperatureCurrent, (double*)&outletDutyDesired, (double*)&outletTemperatureDesired, outletPidKp, outletPidKi, outletPidKd);
+  inletController.begin(&shaftRpmCurrent, &inletDutyDesired, &shaftRpmDesired, inletPidKp, inletPidKi, inletPidKd);
+  outletController.begin(&outletTemperatureCurrent, &outletDutyDesired, &outletTemperatureDesired, outletPidKp, outletPidKi, outletPidKd);
   inletController.reverse();
   outletController.reverse();
 
@@ -389,7 +373,7 @@ void parseIncomingSerial() {
 
 }
 
-// 10 bytes
+// 15 bytes
 void sendTelemetry(bool pass, bool fail) {
 
   // status
@@ -416,18 +400,23 @@ void sendTelemetry(bool pass, bool fail) {
   Serial.write(status);
 
   // shaft rpm
-  Serial.write(rpmPtr, 2);
+  byte * rpmPtr = (byte *)shaftRpmCurrent;
+  Serial.write(rpmPtr, 4);
 
   // measured load cell force
+  byte * forcePtr = (byte *)&loadCellForceCurrent;
   Serial.write(forcePtr, 4);
 
   // inlet duty cycle
-  Serial.write(inletDutyDesired);
+  byte * inletDutyPtr = (byte *)&inletDutyDesired;
+  Serial.write(inletDutyPtr, 4);
 
   // outlet duty cycle
-  Serial.write(outletDutyDesired);
+  byte * outletDutyPtr = (byte *)&outletDutyDesired;
+  Serial.write(outletDutyPtr, 4);
 
   // outlet water temperatur
+  byte * outletTempCurrentPtr = (byte *)&outletTemperatureCurrent;
   Serial.write(outletTempCurrentPtr, 4);
 
 }
