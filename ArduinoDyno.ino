@@ -11,8 +11,9 @@
 #define                 INCOMING_PACKET_SIZE_BYTES        6
 
 // internal PID config
-#define                 MAIN_LOOP_SAMPLE_RATE_MICROS      12821 // 75Hz main loop rate
-#define                 PID_SAMPLE_RATE_MICROS            14280 // 70Hz pid rate
+#define                 LOADCELL_SAMPLE_RATE_MICROS       30000 //20000 // 14286 //12821 // 78Hz load cell sample rate
+#define                 OUTLET_TEMP_SAMPLE_RATE_MICROS    0 // TODO: SET ME
+#define                 PID_SAMPLE_RATE_MICROS            10000 // 100Hz pid rate
 
 // Shaft Speed config
 double                  shaftRpmMaximum                   = 9000;
@@ -62,9 +63,12 @@ double                  loadCellForceCurrent              = 255.99;
 bool configured = false;
 bool critical = true;
 
-unsigned long lastLoopTime = 0;
+unsigned long currentMicros = micros();
+unsigned long lastMicros = 0;
 unsigned long lastLoopTimeDelta = 0;
-unsigned long lastPidMicros = micros();
+
+unsigned long lastLoadCellMicros = 0;
+unsigned long lastPidMicros = 0;
 
 bool microsOverflowed = false;
 
@@ -127,12 +131,6 @@ void setup() {
 
 void loop() {
 
-  // Check for serial comms + respond  + perform any special request + update variables
-  if (Serial.available() >= INCOMING_PACKET_SIZE_BYTES) { parseIncomingSerial(); }
-
-  // main loop anti-jitter
-  while (micros() < lastLoopTime + MAIN_LOOP_SAMPLE_RATE_MICROS)
-
   // Read/compute sensor data -- FUNCTIONS DISABLED FOR TESTING
   calculateRpm();
   // Temperature
@@ -143,27 +141,18 @@ void loop() {
   // }
 
   // Load Cell
-  loadCellForceCurrent = torqueSensor.get_units();
 
-  // TODO: Check for failure cases
+  if ((micros() >= (lastLoadCellMicros + LOADCELL_SAMPLE_RATE_MICROS - lastLoopTimeDelta - 100))) {
 
-  // Recalculate pid (only works if enabled)
-  // SUPREME ANTI-JITTER PID TIMING
-  unsigned long currentMicros = micros();
-  lastLoopTimeDelta = currentMicros - lastLoopTime;
-  lastLoopTime = currentMicros;
+    loadCellForceCurrent = torqueSensor.get_units();
+    lastLoadCellMicros = micros();
 
-  // handle overflow of micros()
-  if (lastLoopTime > currentMicros) {
-    microsOverflowed = true;
-  } else {
-    microsOverflowed = false;
   }
 
+  // Recalculate pid (only works if enabled)
   if (!inletOverrideActive || !outletOverrideActive && !microsOverflowed) {
 
-    if (micros() > (lastPidMicros + PID_SAMPLE_RATE_MICROS) || 
-        (micros() > (lastPidMicros + PID_SAMPLE_RATE_MICROS - lastLoopTimeDelta - 100))) {
+    if (micros() >= (lastPidMicros + PID_SAMPLE_RATE_MICROS - lastLoopTimeDelta - 100)) {
       inletController.compute();
       outletController.compute();
       lastPidMicros = micros();
@@ -171,9 +160,26 @@ void loop() {
 
   }
 
+  // TODO: Check for failure cases
+
   // Set outputs
   setInlet(inletDutyDesired);
   setOutlet(outletDutyDesired);
+
+  // Check for serial comms + respond  + perform any special request + update variables
+  if (Serial.available() >= INCOMING_PACKET_SIZE_BYTES) { parseIncomingSerial(); }
+
+  // calculate loop timing
+  lastMicros = currentMicros;
+  currentMicros = micros();
+  lastLoopTimeDelta = currentMicros - lastMicros;
+
+  // flag overflow of micros()
+  if (lastMicros > currentMicros) {
+    microsOverflowed = true;
+  } else {
+    microsOverflowed = false;
+  }
 
 }
 
