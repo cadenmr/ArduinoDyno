@@ -138,10 +138,9 @@ void loop() {
   // }
 
   // Load Cell
-  // if (torqueSensor.dataReady()) {
-  //   critical = true;
-  //   loadCellForceCurrent = torqueSensor.readData();
-  // }
+  if (torqueSensor.dataReady()) {
+    loadCellForceCurrent = torqueSensor.readData();
+  }
 
   // Recalculate pid (only works if enabled)
   if (!inletOverrideActive || !outletOverrideActive) {
@@ -373,20 +372,24 @@ void parseIncomingSerial() {
 
   } else if (commandByte == 0x19) {   // set load cell offset DEPRECIATED
 
-    // loadCellOffset = serialDataToUnsignedLong();
+    unsigned long shred = serialDataToUnsignedLong();
     // torqueSensor.set_offset(loadCellOffset);
     sendTelemetry(false, true);
 
   } else if (commandByte == 0x1A) {   // set load cell scale DEPRECIATED
 
-    // loadCellScale = serialDataToDouble();
+    double shred = serialDataToDouble();
     // torqueSensor.set_scale(loadCellScale);
     sendTelemetry(false, true);
 
   } else if (commandByte == 0x1B) {   // telemetry request (no data)
 
     shredSerialData(5);
-    sendTelemetry(false, false);
+    if (configured) {
+      sendTelemetry(false, false);
+    } else {
+      sendTelemetry(false, true);
+    }
 
   } else if (commandByte == 0x1C) {   // set configured bit
 
