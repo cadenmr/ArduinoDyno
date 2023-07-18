@@ -11,9 +11,9 @@
 #define                 INCOMING_PACKET_SIZE_BYTES        6
 
 // internal PID config
-#define                 LOADCELL_SAMPLE_RATE_MICROS       30000 //20000 // 14286 //12821 // 78Hz load cell sample rate
+#define                 LOADCELL_SAMPLE_RATE_MICROS       12821 // 78Hz load cell sample rate
 #define                 OUTLET_TEMP_SAMPLE_RATE_MICROS    0 // TODO: SET ME
-#define                 PID_SAMPLE_RATE_MICROS            10000 // 100Hz pid rate
+#define                 PID_SAMPLE_RATE_MICROS            10000 // 100hz pid rate
 
 // Shaft Speed config
 double                  shaftRpmMaximum                   = 9000;
@@ -90,7 +90,7 @@ DeviceAddress outletTempSensorAddress;
 void setup() {
   
   // initialize comms 
-  Serial.begin(115200);
+  Serial.begin(38400);
 
   // initialize all sensors
   torqueSensor.begin(LOADCELL_DATA_PIN, LOADCELL_CLOCK_PIN);
@@ -142,32 +142,32 @@ void loop() {
 
   // Load Cell
 
-  if ((micros() >= (lastLoadCellMicros + LOADCELL_SAMPLE_RATE_MICROS - lastLoopTimeDelta - 100))) {
+  // TODO: run this nonblocking to unlimit main loop from 80hz
+  // loadCellForceCurrent = torqueSensor.get_units();
 
+  // future use
+  if ((micros() >= (lastLoadCellMicros + LOADCELL_SAMPLE_RATE_MICROS - lastLoopTimeDelta - 100))) {
     loadCellForceCurrent = torqueSensor.get_units();
     lastLoadCellMicros = micros();
-
   }
 
-  // Recalculate pid (only works if enabled)
+  // // Recalculate pid (only works if enabled)
   if (!inletOverrideActive || !outletOverrideActive && !microsOverflowed) {
-
     if (micros() >= (lastPidMicros + PID_SAMPLE_RATE_MICROS - lastLoopTimeDelta - 100)) {
       inletController.compute();
       outletController.compute();
       lastPidMicros = micros();
     }
-
   }
 
-  // TODO: Check for failure cases
+  // // TODO: Check for failure cases
 
-  // Set outputs
+  // // Set outputs
   setInlet(inletDutyDesired);
   setOutlet(outletDutyDesired);
 
   // Check for serial comms + respond  + perform any special request + update variables
-  if (Serial.available() >= INCOMING_PACKET_SIZE_BYTES) { parseIncomingSerial(); }
+  if (Serial.available() == INCOMING_PACKET_SIZE_BYTES) { parseIncomingSerial(); }
 
   // calculate loop timing
   lastMicros = currentMicros;
