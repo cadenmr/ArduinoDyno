@@ -8,11 +8,12 @@
 #define                 LOADCELL_DATA_PIN                 8
 
 // internal data formatting config
+#define                 SERIAL_RATE                       250000
 #define                 INCOMING_PACKET_SIZE_BYTES        6
 
 // internal PID config
-#define                 LOADCELL_SAMPLE_RATE_MICROS       12821 // 78Hz load cell sample rate
-#define                 OUTLET_TEMP_SAMPLE_RATE_MICROS    0 // TODO: SET ME
+#define                 MAINLOOP_RATE_MICROS              5000  // 200hz main loop rate
+#define                 OUTLET_TEMP_SAMPLE_RATE_MICROS    0     // TODO: SET ME
 #define                 PID_SAMPLE_RATE_MICROS            10000 // 100hz pid rate
 
 // Shaft Speed config
@@ -58,30 +59,25 @@ double                  outletDutyDesired                 = outletMinDuty;
 bool                    outletOverrideActive              = false;
 double                  outletTemperatureCurrent         = 255.99;
 // Load Measurement
-double                  loadCellForceCurrent              = 255.99;
+long                    loadCellForceCurrent              = 256;
 // Internal Objects
 bool configured = false;
 bool critical = true;
 
-unsigned long currentMicros = micros();
-unsigned long lastMicros = 0;
+unsigned long loopStartingMicros = 0;
 unsigned long lastLoopTimeDelta = 0;
-
-unsigned long lastLoadCellMicros = 0;
 unsigned long lastPidMicros = 0;
-
-bool microsOverflowed = false;
 
 // imports
 #include <ArduPID.h>
-#include <HX711.h>  // use robtillaart library
+#include <HX711_light.h>  // use robtillaart library
 #include <OneWire.h>
 #include <DallasTemperature.h>
 
 ArduPID inletController;
 ArduPID outletController;
 
-HX711 torqueSensor;
+HX711_light torqueSensor(LOADCELL_DATA_PIN, LOADCELL_CLOCK_PIN);
 
 OneWire oneWire(OUTLET_TEMP_PIN);
 DallasTemperature dallasTempSensors(&oneWire);
@@ -90,11 +86,10 @@ DeviceAddress outletTempSensorAddress;
 void setup() {
   
   // initialize comms 
-  Serial.begin(38400);
+  Serial.begin(SERIAL_RATE);
 
   // initialize all sensors
-  torqueSensor.begin(LOADCELL_DATA_PIN, LOADCELL_CLOCK_PIN);
-  torqueSensor.set_raw_mode();
+  torqueSensor.begin();
   // TODO: handle sensor not found error
   dallasTempSensors.begin();
   if (!dallasTempSensors.getAddress(outletTempSensorAddress, 0)) {
@@ -131,6 +126,8 @@ void setup() {
 
 void loop() {
 
+  loopStartingMicros = micros();
+
   // Read/compute sensor data -- FUNCTIONS DISABLED FOR TESTING
   calculateRpm();
   // Temperature
@@ -141,45 +138,31 @@ void loop() {
   // }
 
   // Load Cell
+  // if (torqueSensor.dataReady()) {
+  //   critical = true;
+  //   loadCellForceCurrent = torqueSensor.readData();
+  // }
 
-  // TODO: run this nonblocking to unlimit main loop from 80hz
-  // loadCellForceCurrent = torqueSensor.get_units();
-
-  // future use
-  if ((micros() >= (lastLoadCellMicros + LOADCELL_SAMPLE_RATE_MICROS - lastLoopTimeDelta - 100))) {
-    loadCellForceCurrent = torqueSensor.get_units();
-    lastLoadCellMicros = micros();
-  }
-
-  // // Recalculate pid (only works if enabled)
-  if (!inletOverrideActive || !outletOverrideActive && !microsOverflowed) {
-    if (micros() >= (lastPidMicros + PID_SAMPLE_RATE_MICROS - lastLoopTimeDelta - 100)) {
+  // Recalculate pid (only works if enabled)
+  if (!inletOverrideActive || !outletOverrideActive) {
+    if (micros() >= (lastPidMicros + PID_SAMPLE_RATE_MICROS - MAINLOOP_RATE_MICROS)) {
       inletController.compute();
       outletController.compute();
       lastPidMicros = micros();
     }
   }
 
-  // // TODO: Check for failure cases
+  // TODO: Check for failure cases
 
-  // // Set outputs
+  // Set outputs
   setInlet(inletDutyDesired);
   setOutlet(outletDutyDesired);
 
   // Check for serial comms + respond  + perform any special request + update variables
   if (Serial.available() == INCOMING_PACKET_SIZE_BYTES) { parseIncomingSerial(); }
 
-  // calculate loop timing
-  lastMicros = currentMicros;
-  currentMicros = micros();
-  lastLoopTimeDelta = currentMicros - lastMicros;
-
-  // flag overflow of micros()
-  if (lastMicros > currentMicros) {
-    microsOverflowed = true;
-  } else {
-    microsOverflowed = false;
-  }
+  // hold here if main loop completes early
+  while (micros() < loopStartingMicros + MAINLOOP_RATE_MICROS) {}
 
 }
 
@@ -372,31 +355,33 @@ void parseIncomingSerial() {
       sendTelemetry(false, true);
     }
 
-  } else if (commandByte == 0x18) {   // set load cell resolution
+  } else if (commandByte == 0x18) {   // set load cell resolution TODO: FIX THIS
 
-    byte tempResolution = serialDataToByte();
+    // byte tempResolution = serialDataToByte();
 
-    if (tempResolution == 64 || tempResolution == 128 ) {
+    // if (tempResolution == 64 || tempResolution == 128 ) {
 
-      loadCellResolution = tempResolution;
-      torqueSensor.set_gain(loadCellResolution, false);
-      sendTelemetry(true, false);
+    //   loadCellResolution = tempResolution;
+    //   torqueSensor.set_gain(loadCellResolution, false);
+    //   sendTelemetry(true, false);
 
-    } else {
-      sendTelemetry(false, true);
-    }
+    // } else {
+    //   sendTelemetry(false, true);
+    // }
 
-  } else if (commandByte == 0x19) {   // set load cell offset
+    sendTelemetry(false, true);
 
-    loadCellOffset = serialDataToUnsignedLong();
-    torqueSensor.set_offset(loadCellOffset);
-    sendTelemetry(true, false);
+  } else if (commandByte == 0x19) {   // set load cell offset DEPRECIATED
 
-  } else if (commandByte == 0x1A) {   // set load cell scale
+    // loadCellOffset = serialDataToUnsignedLong();
+    // torqueSensor.set_offset(loadCellOffset);
+    sendTelemetry(false, true);
 
-    loadCellScale = serialDataToDouble();
-    torqueSensor.set_scale(loadCellScale);
-    sendTelemetry(true, false);
+  } else if (commandByte == 0x1A) {   // set load cell scale DEPRECIATED
+
+    // loadCellScale = serialDataToDouble();
+    // torqueSensor.set_scale(loadCellScale);
+    sendTelemetry(false, true);
 
   } else if (commandByte == 0x1B) {   // telemetry request (no data)
 
@@ -422,7 +407,7 @@ void sendTelemetry(bool pass, bool fail) {
   if (pass) {
     bitSet(status, 5);
   } 
-  
+
   if (fail) {
     bitSet(status, 6);
   }
