@@ -63,8 +63,9 @@ double                  outletTemperatureCurrent         = 255.99;
 long                    loadCellForceCurrent              = 256;
 // Internal Objects
 bool configured = false;
-bool critical = true;
+bool critical = false;
 bool tempSensorIsDisconnected = false;
+bool mainLoopBrokeRealtime = false;
 
 unsigned long loopStartingMicros = 0;
 unsigned long lastPidMicros = 0;
@@ -119,8 +120,6 @@ void setup() {
 
   }
 
-  critical = false;
-
   // start reading RPM
   attachInterrupt(digitalPinToInterrupt(SHAFT_HALL_PICKUP_PIN), hallInterrupt, FALLING);
 
@@ -135,7 +134,7 @@ void loop() {
   calculateRpm();
 
   // Temperature
-  if ((micros() >= lastTempMicros + OUTLET_TEMP_SAMPLE_RATE_MICROS - MAINLOOP_RATE_MICROS) && !tempSensorIsDisconnected) {
+  if (!tempSensorIsDisconnected && (micros() >= lastTempMicros + OUTLET_TEMP_SAMPLE_RATE_MICROS - MAINLOOP_RATE_MICROS)) {
 
     dallasTempSensors.requestTemperatures();
     outletTemperatureCurrent = dallasTempSensors.getTempC(outletTempSensorAddress);
@@ -168,6 +167,11 @@ void loop() {
 
   // Check for serial comms + respond  + perform any special request + update variables
   if (Serial.available() == INCOMING_PACKET_SIZE_BYTES) { parseIncomingSerial(); }
+
+  mainLoopBrokeRealtime = false;
+  if ((micros() - loopStartingMicros) > MAINLOOP_RATE_MICROS) {
+    mainLoopBrokeRealtime = true;
+  }
 
   // hold here if main loop completes early
   while (micros() < loopStartingMicros + MAINLOOP_RATE_MICROS) {}
@@ -417,29 +421,30 @@ void sendTelemetry(bool pass, bool fail) {
   critical = false;
 
   // status
-  // pass/fail
   byte status = 0b00000000;
+  
   if (pass) {
     bitSet(status, 5);
   } 
-
   if (fail) {
     bitSet(status, 6);
   }
 
-  if (tempSensorIsDisconnected) {
+  if (!configured) {
+    status += 0x01;
+    critical = true;
+  } else if (mainLoopBrokeRealtime) {
+    status += 0x03;
+    critical = true;
+  } else if (tempSensorIsDisconnected) {
     status += 0x02;
     critical = true;
   }
 
+  // TODO: Add more failure codes
+
   if (critical) {
     bitSet(status, 4);
-  }
-
-  // TODO: add error telemetry here
-
-  if (!configured) {
-    status += 0x01;
   }
   
   Serial.write(status);
