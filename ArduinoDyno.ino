@@ -66,6 +66,12 @@ bool configured = false;
 bool critical = false;
 bool tempSensorIsDisconnected = false;
 bool mainLoopBrokeRealtime = false;
+// telem ptrs
+byte * rpmPtr = (byte *)&shaftRpmCurrent;
+byte * forcePtr = (byte *)&loadCellForceCurrent;
+byte * inletDutyPtr = (byte *)&inletDutyDesired;
+byte * outletDutyPtr = (byte *)&outletDutyDesired;
+byte * outletTempCurrentPtr = (byte *)&outletTemperatureCurrent;
 
 unsigned long loopStartingMicros = 0;
 unsigned long lastPidMicros = 0;
@@ -452,23 +458,18 @@ void sendTelemetry(bool pass, bool fail) {
   Serial.write(status);
 
   // shaft rpm
-  byte * rpmPtr = (byte *)&shaftRpmCurrent;
   Serial.write(rpmPtr, 4);
 
   // measured load cell force
-  byte * forcePtr = (byte *)&loadCellForceCurrent;
   Serial.write(forcePtr, 4);
 
   // inlet duty cycle
-  byte * inletDutyPtr = (byte *)&inletDutyDesired;
   Serial.write(inletDutyPtr, 4);
 
   // outlet duty cycle
-  byte * outletDutyPtr = (byte *)&outletDutyDesired;
   Serial.write(outletDutyPtr, 4);
 
   // outlet water temperatur
-  byte * outletTempCurrentPtr = (byte *)&outletTemperatureCurrent;
   Serial.write(outletTempCurrentPtr, 4);
 
 }
