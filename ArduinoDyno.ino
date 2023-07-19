@@ -550,7 +550,7 @@ void setInlet(double duty) {
   if (setDuty < inletMinDuty ) { setDuty = inletMinDuty; }
   if (setDuty > inletMaxDuty) { setDuty = inletMaxDuty; }
 
-  setDuty = map(setDuty, 0, 100, 0, 255);
+  setDuty = map(setDuty, 0, 100, 128, 0);
   analogWrite(INLET_SERVO_PIN, setDuty);
 
 }
@@ -561,7 +561,7 @@ void setOutlet(double duty) {
   if (setDuty < outletMinDuty ) { setDuty = outletMinDuty; }
   if (setDuty > outletMaxDuty) { setDuty = outletMaxDuty; }
 
-  setDuty = map(setDuty, 0, 100, 0, 255);
+  setDuty = map(setDuty, 0, 100, 128, 0);
   analogWrite(OUTLET_SERVO_PIN, setDuty);
 
 }
