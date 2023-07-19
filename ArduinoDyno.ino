@@ -11,10 +11,11 @@
 #define                 SERIAL_RATE                       250000
 #define                 INCOMING_PACKET_SIZE_BYTES        6
 
-// internal PID config
-#define                 MAINLOOP_RATE_MICROS              5000  // 200hz main loop rate
-#define                 OUTLET_TEMP_SAMPLE_RATE_MICROS    0     // TODO: SET ME
-#define                 PID_SAMPLE_RATE_MICROS            10000 // 100hz pid rate
+// sample rates
+#define                 MAINLOOP_RATE_MICROS              5000    // 200hz master limiter
+// load cell is sampled as data is available, non blocking
+#define                 OUTLET_TEMP_SAMPLE_RATE_MICROS    200000  // 5hz temp sensor rate
+#define                 PID_SAMPLE_RATE_MICROS            10000   // 100hz pid rate
 
 // Shaft Speed config
 double                  shaftRpmMaximum                   = 9000;
@@ -65,7 +66,6 @@ bool configured = false;
 bool critical = true;
 
 unsigned long loopStartingMicros = 0;
-unsigned long lastLoopTimeDelta = 0;
 unsigned long lastPidMicros = 0;
 
 // imports
@@ -356,7 +356,7 @@ void parseIncomingSerial() {
 
   } else if (commandByte == 0x18) {   // set load cell resolution TODO: FIX THIS
 
-    // byte tempResolution = serialDataToByte();
+    unsigned int tempResolution = serialDataToUnsignedInt();
 
     // if (tempResolution == 64 || tempResolution == 128 ) {
 
