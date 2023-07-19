@@ -137,10 +137,12 @@ void loop() {
   if (!tempSensorIsDisconnected && (micros() >= lastTempMicros + OUTLET_TEMP_SAMPLE_RATE_MICROS - MAINLOOP_RATE_MICROS)) {
 
     dallasTempSensors.requestTemperatures();
-    outletTemperatureCurrent = dallasTempSensors.getTempC(outletTempSensorAddress);
+    double outletTemperatureTemp = dallasTempSensors.getTempC(outletTempSensorAddress);
 
-    if (outletTemperatureCurrent == DEVICE_DISCONNECTED_C) {
+    if (outletTemperatureTemp == DEVICE_DISCONNECTED_C) {
       tempSensorIsDisconnected = true;
+    } else {
+      outletTemperatureCurrent = outletTemperatureTemp;
     }
 
   }
