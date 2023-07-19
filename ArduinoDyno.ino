@@ -64,9 +64,11 @@ long                    loadCellForceCurrent              = 256;
 // Internal Objects
 bool configured = false;
 bool critical = true;
+bool tempSensorIsDisconnected = false;
 
 unsigned long loopStartingMicros = 0;
 unsigned long lastPidMicros = 0;
+unsigned long lastTempMicros = 0;
 
 // imports
 #include <ArduPID.h>
@@ -126,16 +128,23 @@ void setup() {
 
 void loop() {
 
+  // record current time upon beginning loop
   loopStartingMicros = micros();
 
-  // Read/compute sensor data -- FUNCTIONS DISABLED FOR TESTING
+  // Read/compute all sensor data
   calculateRpm();
+
   // Temperature
-  // dallasTempSensors.requestTemperatures();
-  // outletTemperatureCurrent = dallasTempSensors.getTempC(outletTempSensorAddress);
-  // if (outletTemperatureCurrent == DEVICE_DISCONNECTED_C) {
-  //   // TODO: handle this error
-  // }
+  if ((micros() >= lastTempMicros + OUTLET_TEMP_SAMPLE_RATE_MICROS - MAINLOOP_RATE_MICROS) && !tempSensorIsDisconnected) {
+
+    dallasTempSensors.requestTemperatures();
+    outletTemperatureCurrent = dallasTempSensors.getTempC(outletTempSensorAddress);
+
+    if (outletTemperatureCurrent == DEVICE_DISCONNECTED_C) {
+      tempSensorIsDisconnected = true;
+    }
+
+  }
 
   // Load Cell
   if (torqueSensor.dataReady()) {
@@ -404,6 +413,9 @@ void parseIncomingSerial() {
 // 21 bytes
 void sendTelemetry(bool pass, bool fail) {
 
+  // reset critical flag before re-checking for it
+  critical = false;
+
   // status
   // pass/fail
   byte status = 0b00000000;
@@ -413,6 +425,11 @@ void sendTelemetry(bool pass, bool fail) {
 
   if (fail) {
     bitSet(status, 6);
+  }
+
+  if (tempSensorIsDisconnected) {
+    status += 0x02;
+    critical = true;
   }
 
   if (critical) {
