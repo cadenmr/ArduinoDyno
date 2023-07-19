@@ -8,11 +8,14 @@
 #define                 LOADCELL_DATA_PIN                 8
 
 // internal data formatting config
+#define                 SERIAL_RATE                       250000
 #define                 INCOMING_PACKET_SIZE_BYTES        6
 
-// internal PID config
-#define                 MAIN_LOOP_SAMPLE_RATE_MICROS      12821 // 75Hz main loop rate
-#define                 PID_SAMPLE_RATE_MICROS            14280 // 70Hz pid rate
+// sample rates
+#define                 MAINLOOP_RATE_MICROS              5000    // 200hz master limiter
+// load cell is sampled as data is available, non blocking
+#define                 OUTLET_TEMP_SAMPLE_RATE_MICROS    200000  // 5hz temp sensor rate
+#define                 PID_SAMPLE_RATE_MICROS            10000   // 100hz pid rate
 
 // Shaft Speed config
 double                  shaftRpmMaximum                   = 9000;
@@ -57,27 +60,27 @@ double                  outletDutyDesired                 = outletMinDuty;
 bool                    outletOverrideActive              = false;
 double                  outletTemperatureCurrent         = 255.99;
 // Load Measurement
-double                  loadCellForceCurrent              = 255.99;
+long                    loadCellForceCurrent              = 256;
 // Internal Objects
 bool configured = false;
-bool critical = true;
+bool critical = false;
+bool tempSensorIsDisconnected = false;
+bool mainLoopBrokeRealtime = false;
 
-unsigned long lastLoopTime = 0;
-unsigned long lastLoopTimeDelta = 0;
-unsigned long lastPidMicros = micros();
-
-bool microsOverflowed = false;
+unsigned long loopStartingMicros = 0;
+unsigned long lastPidMicros = 0;
+unsigned long lastTempMicros = 0;
 
 // imports
 #include <ArduPID.h>
-#include <HX711.h>  // use robtillaart library
+#include <HX711_light.h>  // use robtillaart library
 #include <OneWire.h>
 #include <DallasTemperature.h>
 
 ArduPID inletController;
 ArduPID outletController;
 
-HX711 torqueSensor;
+HX711_light torqueSensor(LOADCELL_DATA_PIN, LOADCELL_CLOCK_PIN);
 
 OneWire oneWire(OUTLET_TEMP_PIN);
 DallasTemperature dallasTempSensors(&oneWire);
@@ -86,11 +89,10 @@ DeviceAddress outletTempSensorAddress;
 void setup() {
   
   // initialize comms 
-  Serial.begin(115200);
+  Serial.begin(SERIAL_RATE);
 
   // initialize all sensors
-  torqueSensor.begin(LOADCELL_DATA_PIN, LOADCELL_CLOCK_PIN);
-  torqueSensor.set_raw_mode();
+  torqueSensor.begin();
   // TODO: handle sensor not found error
   dallasTempSensors.begin();
   if (!dallasTempSensors.getAddress(outletTempSensorAddress, 0)) {
@@ -118,8 +120,6 @@ void setup() {
 
   }
 
-  critical = false;
-
   // start reading RPM
   attachInterrupt(digitalPinToInterrupt(SHAFT_HALL_PICKUP_PIN), hallInterrupt, FALLING);
 
@@ -127,53 +127,54 @@ void setup() {
 
 void loop() {
 
-  // Check for serial comms + respond  + perform any special request + update variables
-  if (Serial.available() >= INCOMING_PACKET_SIZE_BYTES) { parseIncomingSerial(); }
+  // record current time upon beginning loop
+  loopStartingMicros = micros();
 
-  // main loop anti-jitter
-  while (micros() < lastLoopTime + MAIN_LOOP_SAMPLE_RATE_MICROS)
-
-  // Read/compute sensor data -- FUNCTIONS DISABLED FOR TESTING
+  // Read/compute all sensor data
   calculateRpm();
+
   // Temperature
-  // dallasTempSensors.requestTemperatures();
-  // outletTemperatureCurrent = dallasTempSensors.getTempC(outletTempSensorAddress);
-  // if (outletTemperatureCurrent == DEVICE_DISCONNECTED_C) {
-  //   // TODO: handle this error
-  // }
+  if (!tempSensorIsDisconnected && (micros() >= lastTempMicros + OUTLET_TEMP_SAMPLE_RATE_MICROS - MAINLOOP_RATE_MICROS)) {
 
-  // Load Cell
-  loadCellForceCurrent = torqueSensor.get_units();
+    dallasTempSensors.requestTemperatures();
+    outletTemperatureCurrent = dallasTempSensors.getTempC(outletTempSensorAddress);
 
-  // TODO: Check for failure cases
-
-  // Recalculate pid (only works if enabled)
-  // SUPREME ANTI-JITTER PID TIMING
-  unsigned long currentMicros = micros();
-  lastLoopTimeDelta = currentMicros - lastLoopTime;
-  lastLoopTime = currentMicros;
-
-  // handle overflow of micros()
-  if (lastLoopTime > currentMicros) {
-    microsOverflowed = true;
-  } else {
-    microsOverflowed = false;
-  }
-
-  if (!inletOverrideActive || !outletOverrideActive && !microsOverflowed) {
-
-    if (micros() > (lastPidMicros + PID_SAMPLE_RATE_MICROS) || 
-        (micros() > (lastPidMicros + PID_SAMPLE_RATE_MICROS - lastLoopTimeDelta - 100))) {
-      inletController.compute();
-      outletController.compute();
-      lastPidMicros = micros();
+    if (outletTemperatureCurrent == DEVICE_DISCONNECTED_C) {
+      tempSensorIsDisconnected = true;
     }
 
   }
 
+  // Load Cell
+  if (torqueSensor.dataReady()) {
+    loadCellForceCurrent = torqueSensor.readData();
+  }
+
+  // Recalculate pid (only works if enabled)
+  if (!inletOverrideActive || !outletOverrideActive) {
+    if (micros() >= (lastPidMicros + PID_SAMPLE_RATE_MICROS - MAINLOOP_RATE_MICROS)) {
+      inletController.compute();
+      outletController.compute();
+      lastPidMicros = micros();
+    }
+  }
+
+  // TODO: Check for failure cases
+
   // Set outputs
   setInlet(inletDutyDesired);
   setOutlet(outletDutyDesired);
+
+  // Check for serial comms + respond  + perform any special request + update variables
+  if (Serial.available() == INCOMING_PACKET_SIZE_BYTES) { parseIncomingSerial(); }
+
+  mainLoopBrokeRealtime = false;
+  if ((micros() - loopStartingMicros) > MAINLOOP_RATE_MICROS) {
+    mainLoopBrokeRealtime = true;
+  }
+
+  // hold here if main loop completes early
+  while (micros() < loopStartingMicros + MAINLOOP_RATE_MICROS) {}
 
 }
 
@@ -366,36 +367,42 @@ void parseIncomingSerial() {
       sendTelemetry(false, true);
     }
 
-  } else if (commandByte == 0x18) {   // set load cell resolution
+  } else if (commandByte == 0x18) {   // set load cell resolution TODO: FIX THIS
 
-    byte tempResolution = serialDataToByte();
+    unsigned int tempResolution = serialDataToUnsignedInt();
 
-    if (tempResolution == 64 || tempResolution == 128 ) {
+    // if (tempResolution == 64 || tempResolution == 128 ) {
 
-      loadCellResolution = tempResolution;
-      torqueSensor.set_gain(loadCellResolution, false);
-      sendTelemetry(true, false);
+    //   loadCellResolution = tempResolution;
+    //   torqueSensor.set_gain(loadCellResolution, false);
+    //   sendTelemetry(true, false);
 
-    } else {
-      sendTelemetry(false, true);
-    }
+    // } else {
+    //   sendTelemetry(false, true);
+    // }
 
-  } else if (commandByte == 0x19) {   // set load cell offset
+    sendTelemetry(false, true);
 
-    loadCellOffset = serialDataToUnsignedLong();
-    torqueSensor.set_offset(loadCellOffset);
-    sendTelemetry(true, false);
+  } else if (commandByte == 0x19) {   // set load cell offset DEPRECIATED
 
-  } else if (commandByte == 0x1A) {   // set load cell scale
+    unsigned long shred = serialDataToUnsignedLong();
+    // torqueSensor.set_offset(loadCellOffset);
+    sendTelemetry(false, true);
 
-    loadCellScale = serialDataToDouble();
-    torqueSensor.set_scale(loadCellScale);
-    sendTelemetry(true, false);
+  } else if (commandByte == 0x1A) {   // set load cell scale DEPRECIATED
+
+    double shred = serialDataToDouble();
+    // torqueSensor.set_scale(loadCellScale);
+    sendTelemetry(false, true);
 
   } else if (commandByte == 0x1B) {   // telemetry request (no data)
 
     shredSerialData(5);
-    sendTelemetry(false, false);
+    if (configured) {
+      sendTelemetry(false, false);
+    } else {
+      sendTelemetry(false, true);
+    }
 
   } else if (commandByte == 0x1C) {   // set configured bit
 
@@ -410,25 +417,34 @@ void parseIncomingSerial() {
 // 21 bytes
 void sendTelemetry(bool pass, bool fail) {
 
+  // reset critical flag before re-checking for it
+  critical = false;
+
   // status
-  // pass/fail
   byte status = 0b00000000;
+  
   if (pass) {
     bitSet(status, 5);
   } 
-  
   if (fail) {
     bitSet(status, 6);
   }
 
-  if (critical) {
-    bitSet(status, 4);
-  }
-
-  // TODO: add error telemetry here
-
   if (!configured) {
     status += 0x01;
+    critical = true;
+  } else if (mainLoopBrokeRealtime) {
+    status += 0x03;
+    critical = true;
+  } else if (tempSensorIsDisconnected) {
+    status += 0x02;
+    critical = true;
+  }
+
+  // TODO: Add more failure codes
+
+  if (critical) {
+    bitSet(status, 4);
   }
   
   Serial.write(status);
