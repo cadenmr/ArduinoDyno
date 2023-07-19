@@ -64,8 +64,10 @@ long                    loadCellForceCurrent              = 256;
 // Internal Objects
 bool configured = false;
 bool critical = false;
+// failure states
 bool tempSensorIsDisconnected = false;
 bool mainLoopBrokeRealtime = false;
+bool shaftRpmTooFast = false;
 // telem ptrs
 byte * rpmPtr = (byte *)&shaftRpmCurrent;
 byte * forcePtr = (byte *)&loadCellForceCurrent;
@@ -136,10 +138,14 @@ void loop() {
   // record current time upon beginning loop
   loopStartingMicros = micros();
 
-  // Read/compute all sensor data
   calculateRpm();
 
   // Temperature
+  // prevent bug on overflow
+  if (micros() < lastTempMicros) {
+    lastTempMicros = 0;
+  }
+
   if (!tempSensorIsDisconnected && (micros() >= lastTempMicros + OUTLET_TEMP_SAMPLE_RATE_MICROS - MAINLOOP_RATE_MICROS)) {
 
     dallasTempSensors.requestTemperatures();
@@ -159,15 +165,19 @@ void loop() {
   }
 
   // Recalculate pid (only works if enabled)
-  if (!inletOverrideActive || !outletOverrideActive) {
-    if (micros() >= (lastPidMicros + PID_SAMPLE_RATE_MICROS - MAINLOOP_RATE_MICROS)) {
-      inletController.compute();
-      outletController.compute();
-      lastPidMicros = micros();
-    }
+  // prevent bug on overflow
+  if (micros() < lastPidMicros) {
+    lastPidMicros = 0;
   }
 
-  // TODO: Check for failure cases
+  if (micros() >= (lastPidMicros + PID_SAMPLE_RATE_MICROS - MAINLOOP_RATE_MICROS)) {
+    inletController.compute();
+    outletController.compute();
+    lastPidMicros = micros();
+  }
+
+  // TODO: Check for more failure cases
+  shaftRpmTooFast = shaftRpmOverspeed();
 
   // Set outputs
   setInlet(inletDutyDesired);
@@ -182,7 +192,10 @@ void loop() {
   }
 
   // hold here if main loop completes early
-  while (micros() < loopStartingMicros + MAINLOOP_RATE_MICROS) {}
+  while (micros() < loopStartingMicros + MAINLOOP_RATE_MICROS) {
+    // prevent hang if micros() overflows
+    if (micros() <= loopStartingMicros) { break; }
+  }
 
 }
 
@@ -438,18 +451,20 @@ void sendTelemetry(bool pass, bool fail) {
     bitSet(status, 6);
   }
 
+  // TODO: Add more failure codes
   if (!configured) {
-    status += 0x01;
+    status += 0x1;
     critical = true;
   } else if (mainLoopBrokeRealtime) {
-    status += 0x03;
+    status += 0x2;
+    critical = true;
+  } else if (shaftRpmTooFast) {
+    status += 0x3;
     critical = true;
   } else if (tempSensorIsDisconnected) {
-    status += 0x02;
+    status += 0x04;
     critical = true;
   }
-
-  // TODO: Add more failure codes
 
   if (critical) {
     bitSet(status, 4);
@@ -521,7 +536,7 @@ void hallInterrupt() {
 
 bool shaftRpmOverspeed() {
 
-  if (shaftRpmCurrent > shaftRpmMaximum) {
+  if (shaftRpmCurrent >= shaftRpmMaximum - shaftRpmMaximumHyst) {
     return true;
   } else {
     return false;
