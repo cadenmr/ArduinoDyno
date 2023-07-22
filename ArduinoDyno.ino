@@ -14,7 +14,7 @@
 // sample rates
 #define                 MAINLOOP_RATE_MICROS              5000    // 200hz master limiter
 // load cell is sampled as data is available, non blocking
-#define                 OUTLET_TEMP_SAMPLE_RATE_MICROS    200000  // 5hz temp sensor rate
+#define                 OUTLET_TEMP_SAMPLE_RATE_MICROS    1000000  // 5hz temp sensor rate
 #define                 PID_SAMPLE_RATE_MICROS            10000   // 100hz pid rate
 
 // Shaft Speed config
@@ -58,7 +58,7 @@ bool                    inletOverrideActive               = false;
 // Outlet Valve Control
 double                  outletDutyDesired                 = outletMinDuty;
 bool                    outletOverrideActive              = false;
-double                  outletTemperatureCurrent         = 255.99;
+double                  outletTemperatureCurrent         = 0;
 // Load Measurement
 long                    loadCellForceCurrent              = 256;
 // Internal Objects
@@ -84,6 +84,7 @@ unsigned long lastTempMicros = 0;
 #include <HX711_light.h>  // use robtillaart library
 #include <OneWire.h>
 #include <DallasTemperature.h>
+#include <NonBlockingDallas.h>
 
 ArduPID inletController;
 ArduPID outletController;
@@ -93,6 +94,7 @@ HX711_light torqueSensor(LOADCELL_DATA_PIN, LOADCELL_CLOCK_PIN);
 OneWire oneWire(OUTLET_TEMP_PIN);
 DallasTemperature dallasTempSensors(&oneWire);
 DeviceAddress outletTempSensorAddress;
+NonBlockingDallas nonBlockingTempSensor(&dallasTempSensors);
 
 void setup() {
   
@@ -102,10 +104,14 @@ void setup() {
   // initialize all sensors
   torqueSensor.begin();
   // TODO: handle sensor not found error
-  dallasTempSensors.begin();
-  if (!dallasTempSensors.getAddress(outletTempSensorAddress, 0)) {
-    // TODO: handle sensor not found error
-  }
+
+  nonBlockingTempSensor.begin(NonBlockingDallas::resolution_12, NonBlockingDallas::unit_C, OUTLET_TEMP_SAMPLE_RATE_MICROS / 1000);
+  nonBlockingTempSensor.onIntervalElapsed(handleTempTimeout);
+
+  // dallasTempSensors.begin();
+  // if (!dallasTempSensors.getAddress(outletTempSensorAddress, 0)) {
+  //   // TODO: handle sensor not found error
+  // }
 
   // initialize outputs
   setInlet(inletMinDuty);
@@ -141,23 +147,28 @@ void loop() {
   calculateRpm();
 
   // Temperature
+
+  nonBlockingTempSensor.update();
+
   // prevent bug on overflow
-  if (micros() < lastTempMicros) {
-    lastTempMicros = 0;
-  }
+  // if (micros() < lastTempMicros) {
+  //   lastTempMicros = 0;
+  // }
 
-  if (!tempSensorIsDisconnected && (micros() >= lastTempMicros + OUTLET_TEMP_SAMPLE_RATE_MICROS - MAINLOOP_RATE_MICROS)) {
+  // if (!tempSensorIsDisconnected && (micros() >= lastTempMicros + OUTLET_TEMP_SAMPLE_RATE_MICROS - MAINLOOP_RATE_MICROS)) {
 
-    dallasTempSensors.requestTemperatures();
-    double outletTemperatureTemp = dallasTempSensors.getTempC(outletTempSensorAddress);
+  //   dallasTempSensors.requestTemperatures();
+  //   double outletTemperatureTemp = dallasTempSensors.getTempC(outletTempSensorAddress);
 
-    if (outletTemperatureTemp == DEVICE_DISCONNECTED_C) {
-      tempSensorIsDisconnected = true;
-    } else {
-      outletTemperatureCurrent = outletTemperatureTemp;
-    }
+  //   if (outletTemperatureTemp == DEVICE_DISCONNECTED_C) {
+  //     tempSensorIsDisconnected = true;
+  //   } else {
+  //     outletTemperatureCurrent = outletTemperatureTemp;
+  //   }
 
-  }
+  //   lastTempMicros = micros();
+
+  // }
 
   // Load Cell
   if (torqueSensor.dataReady()) {
@@ -564,4 +575,8 @@ void setOutlet(double duty) {
   setDuty = map(setDuty, 0, 100, 128, 0);
   analogWrite(OUTLET_SERVO_PIN, setDuty);
 
+}
+
+void handleTempTimeout(float temperature, bool valid, int deviceIndex) {
+  outletTemperatureCurrent = temperature;
 }
