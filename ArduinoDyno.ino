@@ -1,11 +1,11 @@
 // Pin Config
 #define                 SHAFT_HALL_PICKUP_PIN             2
-#define                 WATER_PUMP_SPEED_PIN              3   // future use
+// #define                 WATER_PUMP_SPEED_PIN              3   // future use
 #define                 OUTLET_TEMP_PIN                   4
-#define                 INLET_SERVO_PIN                   5
-#define                 OUTLET_SERVO_PIN                  6
+#define                 INLET_SERVO_PIN                   6
+#define                 OUTLET_SERVO_PIN                  5
 #define                 LOADCELL_CLOCK_PIN                7
-#define                 LOADCELL_DATA_PIN                 8
+#define                 LOADCELL_DATA_PIN                 3
 
 // internal data formatting config
 #define                 SERIAL_RATE                       250000
@@ -29,16 +29,16 @@ double                  inletPidKi                        = 0;
 double                  inletPidKd                        = 0;
 double                  inletPidIMin                      = 0;
 double                  inletPidIMax                      = 0;
-byte                    inletMinDuty                      = 10;
-byte                    inletMaxDuty                      = 90;
+byte                    inletMinDuty                      = 0;
+byte                    inletMaxDuty                      = 100;
 // Outlet Valve Config
 double                  outletPidKp                       = 0;
 double                  outletPidKi                       = 0;
 double                  outletPidKd                       = 0;
 double                  outletPidIMin                     = 0;
 double                  outletPidIMax                     = 0;
-byte                    outletMinDuty                     = 10;
-byte                    outletMaxDuty                     = 90;
+byte                    outletMinDuty                     = 0;
+byte                    outletMaxDuty                     = 100;
 double                  outletTemperatureDesired          = 50;
 // Measurement Config
 byte                    loadCellAvgConst                  = 3;
@@ -97,6 +97,9 @@ DeviceAddress outletTempSensorAddress;
 NonBlockingDallas nonBlockingTempSensor(&dallasTempSensors);
 
 void setup() {
+
+  TCCR1A = 0b00000001; // 8bit
+  TCCR1B = 0b00001100; // x256 fast pwm
   
   // initialize comms 
   Serial.begin(SERIAL_RATE);
@@ -114,8 +117,8 @@ void setup() {
   // }
 
   // initialize outputs
-  setInlet(inletMinDuty);
-  setOutlet(outletMinDuty);
+  setInlet(50);
+  setOutlet(50);
 
   // initialize PID
   inletController.begin(&shaftRpmCurrent, &inletDutyDesired, &shaftRpmDesired, inletPidKp, inletPidKi, inletPidKd);
@@ -311,8 +314,10 @@ void parseIncomingSerial() {
 
   } else if (commandByte == 0x0D) {   // set inlet override duty cycle
 
+    byte inletDutyTemp = serialDataToByte();
+
     if (inletOverrideActive) {
-      inletDutyDesired = serialDataToByte();
+      inletDutyDesired = inletDutyTemp;
       sendTelemetry(true, false);
     } else {
       sendTelemetry(false, true);
@@ -558,10 +563,10 @@ bool shaftRpmOverspeed() {
 void setInlet(double duty) {
 
   int setDuty = (int)duty;
-  if (setDuty < inletMinDuty ) { setDuty = inletMinDuty; }
-  if (setDuty > inletMaxDuty) { setDuty = inletMaxDuty; }
+  // if (setDuty < inletMinDuty ) { setDuty = inletMinDuty; }
+  // if (setDuty > inletMaxDuty) { setDuty = inletMaxDuty; }
 
-  setDuty = map(setDuty, 0, 100, 128, 0);
+  setDuty = map(setDuty, 0, 100, 53, 100);
   analogWrite(INLET_SERVO_PIN, setDuty);
 
 }
@@ -569,10 +574,10 @@ void setInlet(double duty) {
 void setOutlet(double duty) {
 
   int setDuty = (int)duty;
-  if (setDuty < outletMinDuty ) { setDuty = outletMinDuty; }
-  if (setDuty > outletMaxDuty) { setDuty = outletMaxDuty; }
+  // if (setDuty < outletMinDuty ) { setDuty = outletMinDuty; }
+  // if (setDuty > outletMaxDuty) { setDuty = outletMaxDuty; }
 
-  setDuty = map(setDuty, 0, 100, 128, 0);
+  setDuty = map(setDuty, 0, 100, 53, 100);
   analogWrite(OUTLET_SERVO_PIN, setDuty);
 
 }

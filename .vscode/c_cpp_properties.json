@@ -3,7 +3,7 @@
     "configurations": [
         {
             "name": "Arduino",
-            "compilerPath": "C:\\Users\\Caden\\AppData\\Local\\Arduino15\\packages\\arduino\\tools\\avr-gcc\\7.3.0-atmel3.6.1-arduino7\\bin\\avr-g++",
+            "compilerPath": "/home/caden/.arduino15/packages/arduino/tools/avr-gcc/7.3.0-atmel3.6.1-arduino7/bin/avr-g++",
             "compilerArgs": [
                 "-w",
                 "-std=gnu++11",
@@ -16,19 +16,20 @@
             ],
             "intelliSenseMode": "gcc-x64",
             "includePath": [
-                "C:\\Users\\Caden\\AppData\\Local\\Arduino15\\packages\\arduino\\hardware\\avr\\1.8.6\\cores\\arduino",
-                "C:\\Users\\Caden\\AppData\\Local\\Arduino15\\packages\\arduino\\hardware\\avr\\1.8.6\\variants\\standard",
-                "C:\\Users\\Caden\\Documents\\Arduino\\libraries\\ArduPID\\src",
-                "C:\\Users\\Caden\\Documents\\Arduino\\libraries\\FireTimer\\src",
-                "C:\\Users\\Caden\\Documents\\Arduino\\libraries\\HX711_light\\src",
-                "C:\\Users\\Caden\\Documents\\Arduino\\libraries\\OneWire",
-                "C:\\Users\\Caden\\Documents\\Arduino\\libraries\\DallasTemperature",
-                "c:\\users\\caden\\appdata\\local\\arduino15\\packages\\arduino\\tools\\avr-gcc\\7.3.0-atmel3.6.1-arduino7\\lib\\gcc\\avr\\7.3.0\\include",
-                "c:\\users\\caden\\appdata\\local\\arduino15\\packages\\arduino\\tools\\avr-gcc\\7.3.0-atmel3.6.1-arduino7\\lib\\gcc\\avr\\7.3.0\\include-fixed",
-                "c:\\users\\caden\\appdata\\local\\arduino15\\packages\\arduino\\tools\\avr-gcc\\7.3.0-atmel3.6.1-arduino7\\avr\\include"
+                "/home/caden/.arduino15/packages/arduino/hardware/avr/1.8.6/cores/arduino",
+                "/home/caden/.arduino15/packages/arduino/hardware/avr/1.8.6/variants/standard",
+                "/home/caden/Arduino/libraries/ArduPID/src",
+                "/home/caden/Arduino/libraries/FireTimer/src",
+                "/home/caden/Arduino/libraries/HX711_light/src",
+                "/home/caden/Arduino/libraries/OneWire",
+                "/home/caden/Arduino/libraries/DallasTemperature",
+                "/home/caden/Arduino/libraries/NonBlockingDallas",
+                "/home/caden/.arduino15/packages/arduino/tools/avr-gcc/7.3.0-atmel3.6.1-arduino7/lib/gcc/avr/7.3.0/include",
+                "/home/caden/.arduino15/packages/arduino/tools/avr-gcc/7.3.0-atmel3.6.1-arduino7/lib/gcc/avr/7.3.0/include-fixed",
+                "/home/caden/.arduino15/packages/arduino/tools/avr-gcc/7.3.0-atmel3.6.1-arduino7/avr/include"
             ],
             "forcedInclude": [
-                "C:\\Users\\Caden\\AppData\\Local\\Arduino15\\packages\\arduino\\hardware\\avr\\1.8.6\\cores\\arduino\\Arduino.h"
+                "/home/caden/.arduino15/packages/arduino/hardware/avr/1.8.6/cores/arduino/Arduino.h"
             ],
             "cStandard": "c11",
             "cppStandard": "c++11",
