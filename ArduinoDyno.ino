@@ -397,8 +397,10 @@ void parseIncomingSerial() {
 
   } else if (commandByte == 0x17) {   // set outlet override duty cycle
 
+    byte outletDutyTemp = serialDataToByte();
+
     if (outletOverrideActive) {
-      outletDutyDesired = serialDataToByte();
+      outletDutyDesired = outletDutyTemp;
       sendTelemetry(true, false);
     } else {
       sendTelemetry(false, true);
