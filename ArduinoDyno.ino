@@ -98,8 +98,8 @@ NonBlockingDallas nonBlockingTempSensor(&dallasTempSensors);
 
 void setup() {
 
-  TCCR1A = 0b00000001; // 8bit
-  TCCR1B = 0b00001100; // x256 fast pwm
+  TCCR0B = 0b00000100; // x256
+  TCCR0A = 0b00000011; // fast pwm
   
   // initialize comms 
   Serial.begin(SERIAL_RATE);
@@ -397,10 +397,8 @@ void parseIncomingSerial() {
 
   } else if (commandByte == 0x17) {   // set outlet override duty cycle
 
-    byte outletDutyTemp = serialDataToByte();
-
     if (outletOverrideActive) {
-      outletDutyDesired = outletDutyTemp;
+      outletDutyDesired = serialDataToByte();
       sendTelemetry(true, false);
     } else {
       sendTelemetry(false, true);
